@@ -44,19 +44,13 @@ dataset_name = params['dataset_name']
 if not dataset_id and not dataset_name:
     task.mark_completed(status_message="No dataset provided. Nothing to train on.")
     exit(0)
-    
-if dataset_id: 
-    # download the specific dataset from ClearML Server   
-    server_dataset = Dataset.get(dataset_id=dataset_id, dataset_project="Detection", only_completed=True, alias="base_dataset")
-    extract_path = server_dataset.get_local_copy()
-    print(f"Downloaded dataset name: {server_dataset.name} id: ({server_dataset.id}) to: {extract_path}")
-elif dataset_name: 
+
+if dataset_name: 
     # download the latest registered dataset
     server_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="Detection", only_completed=True, alias="base_dataset")
-    extract_path = server_dataset.get_local_copy()          
-    print(f"Downloaded dataset name: {server_dataset.name} id: ({server_dataset.id}) to: {extract_path}")
 
-
+extract_path = server_dataset.get_local_copy()          
+print(f"Downloaded dataset name: {server_dataset.name} id: ({server_dataset.id}) to: {extract_path}")
 """
 Prepare dataset.
 """
