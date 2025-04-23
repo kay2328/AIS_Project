@@ -1,0 +1,8 @@
+fastapi[standard,docs,dev]
+Jinja2
+numpy
+torch
+torchvision
+opencv-python
+pillow 
+python-multipart

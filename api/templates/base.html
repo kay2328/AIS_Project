@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>SecondSight - EnigmaAI</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', path='css/secondsight.css') }}"
+    />
+  </head>
+
+  <body>
+    <div class="page">
+      <header>
+        <nav>
+          <a href="/"
+            ><img
+              src="{{ url_for('static', path='images/logo.png') }}"
+              class="logo" /></a
+          >
+        </nav>
+      </header>
+      {% block content %} {% endblock %}
+      <footer>
+        <p>© 2024 EnigmaAI</p>
+      </footer>
+    </div>
+  </body>
+</html>

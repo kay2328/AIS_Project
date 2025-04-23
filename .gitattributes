@@ -1,0 +1,7 @@
+# To have consistent configurations irrespecive of the OS
+# To allow Git to automatically detect text files and normalize them to LF in the repo
+* text=auto
+# Explicitly setting line endings for specific file types:
+*.sh text eol=lf
+*.py text eol=lf
+*.bat text eol=crlf
