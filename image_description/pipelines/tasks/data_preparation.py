@@ -47,13 +47,12 @@ if not dataset_id and not dataset_name:
     
 if dataset_id: 
     # download the specific dataset from ClearML Server   
-    server_dataset = Dataset.get(dataset_id=dataset_id)
+    server_dataset = Dataset.get(dataset_id=dataset_id, dataset_project="Detection", only_completed=True, alias="base_dataset")
     extract_path = server_dataset.get_local_copy()
     print(f"Downloaded dataset name: {server_dataset.name} id: ({server_dataset.id}) to: {extract_path}")
 elif dataset_name: 
     # download the latest registered dataset
-    server_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="Detection", only_completed=True,
-    alias="base_dataset")
+    server_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="Detection", only_completed=True, alias="base_dataset")
     extract_path = server_dataset.get_local_copy()          
     print(f"Downloaded dataset name: {server_dataset.name} id: ({server_dataset.id}) to: {extract_path}")
 
@@ -61,10 +60,6 @@ elif dataset_name:
 """
 Prepare dataset.
 """
-
-extract_path = server_dataset.get_local_copy()
-print(f"Downloaded dataset name: {server_dataset.name}, id:{server_dataset.id} to: {extract_path}")
-
 extract_path = Path(extract_path)
 # get image file prefix that has corresponding labels
 images_dir = extract_path / "images"
