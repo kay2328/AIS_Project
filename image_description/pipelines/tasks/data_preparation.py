@@ -25,7 +25,6 @@ data.yaml
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
 project_name="Description"
-
 task = Task.init(project_name=project_name, 
                 task_name="step1_desc_data_preparation")
 
@@ -53,17 +52,15 @@ if dataset_id:
     print(f"Downloaded dataset name: {server_dataset.name} id: ({server_dataset.id}) to: {extract_path}")
 elif dataset_name: 
     # download the latest registered dataset
-    server_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="Detection", only_completed=True)
+    server_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="Detection", only_completed=True,
+    alias="base_dataset")
     extract_path = server_dataset.get_local_copy()          
     print(f"Downloaded dataset name: {server_dataset.name} id: ({server_dataset.id}) to: {extract_path}")
+
 
 """
 Prepare dataset.
 """
-if dataset_id:  # get specific dataset
-    server_dataset = Dataset.get(dataset_id=dataset_id)
-elif dataset_name: # get the latest registered dataset
-    server_dataset = Dataset.get(dataset_name=dataset_name, dataset_project=project_name, only_completed=True)
 
 extract_path = server_dataset.get_local_copy()
 print(f"Downloaded dataset name: {server_dataset.name}, id:{server_dataset.id} to: {extract_path}")
