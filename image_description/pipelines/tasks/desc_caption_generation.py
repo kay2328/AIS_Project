@@ -57,7 +57,7 @@ if not dataset_id and not dataset_name:
     exit(0)
 if dataset_name: 
     # download the latest registered dataset
-    server_dataset = Dataset.get(dataset_name=dataset_name, dataset_project=project_name, only_completed=True, alias="Desc_Dataset")
+    server_dataset = Dataset.get(dataset_name=dataset_name, dataset_project=project_name, only_completed=True, alias="desc_prep_mapping")
 
 extract_path = server_dataset.get_local_copy()          
 print(f"Downloaded dataset name: {server_dataset.name} id: ({server_dataset.id}) to: {extract_path}")
@@ -66,8 +66,7 @@ extract_path = Path(extract_path)
 # get image file prefix that has corresponding labels
 images_dir = extract_path / "images"
 # build a Path to the JSON file under a subfolder "Desc_Caption_Dataset"
-annot_dir  = extract_path / project_name / "Desc_Dataset"
-annot_file = annot_dir / "desc_prep_dataset.json"
+annot_file = extract_path / "desc_prep_dataset.json"
 out_dir = extract_path / project_name / "Desc_Caption_Dataset"
 out_file = out_dir / "desc_caption_dataset.json"
 # ensure the output directory exists
