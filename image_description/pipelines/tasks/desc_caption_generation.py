@@ -37,9 +37,19 @@ project_name="Description"
 MODEL_NAME = "llava-hf/llava-1.5-7b-hf"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
+#get the image dataset from "Detection project- base_dataset"
+images_data = Dataset.get(
+    dataset_name="base_dataset",
+    dataset_project="Detection",
+    only_completed=True,
+    alias="base_images"  
+)
+images_root = Path(images_data.get_local_copy())
+images_dir  = images_root / "images"
+logging.info(f"Images downloaded to: {images_dir}")
+
 task = Task.init(project_name=project_name, 
                 task_name="step2_desc_caption_generation")
-
 params = {
     'dataset_id': '',                # specific version of the dataset
     'dataset_name': 'Desc_Dataset'               # latest registered dataset
@@ -61,10 +71,7 @@ if dataset_name:
 
 extract_path = server_dataset.get_local_copy()          
 print(f"Downloaded dataset name: {server_dataset.name} id: ({server_dataset.id}) to: {extract_path}")
-
 extract_path = Path(extract_path)
-# get image file prefix that has corresponding labels
-images_dir = extract_path / "images"
 annot_file = extract_path / "desc_prep_dataset.json"
 
 if not annot_file.exists():
