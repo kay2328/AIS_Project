@@ -65,8 +65,16 @@ print(f"Downloaded dataset name: {server_dataset.name} id: ({server_dataset.id})
 extract_path = Path(extract_path)
 # get image file prefix that has corresponding labels
 images_dir = extract_path / "images"
-# build a Path to the JSON file under a subfolder "Desc_Caption_Dataset"
 annot_file = extract_path / "desc_prep_dataset.json"
+
+if not annot_file.exists():
+    # print out what _is_ in that folder so you can see where your JSON landed
+    logging.error(f"Expected JSON not found! Contents are:\n{list(extract_path.iterdir())}")
+    raise FileNotFoundError(f"{annot_file} does not exist")
+with annot_file.open("r") as f:
+    mapping = json.load(f)
+logging.info(f"Loaded {len(mapping)} image→annotation entries")
+# build a Path to the JSON file under a subfolder "Desc_Caption_Dataset"
 out_dir = extract_path / project_name / "Desc_Caption_Dataset"
 out_file = out_dir / "desc_caption_dataset.json"
 # ensure the output directory exists
