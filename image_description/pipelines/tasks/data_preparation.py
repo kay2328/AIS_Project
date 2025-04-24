@@ -1,11 +1,8 @@
 from clearml import Task, Dataset, Model
-import os
 import json
 import logging
 from typing import List, Optional, Dict, Any
 from pathlib import Path
-import shutil
-
 """
 Map the images from latest  dataset stored on ClearML server to their corresponding annotation/labels files.
 Each annotation file (stored in a separate labels folder) may contain one or more lines,
