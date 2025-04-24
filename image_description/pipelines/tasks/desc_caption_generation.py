@@ -1,5 +1,5 @@
 """
-This script generates pseudo captions for a dataset using a teacher model (e.g., BLIP‑2)
+This script generates pseudo captions for a dataset using a teacher model (e.g., Llava v1.5)
 as part of a knowledge distillation pipeline. It leverages object detection annotations
 from a JSON file and a predefined class mapping to build descriptive prompts.
 
@@ -48,6 +48,7 @@ images_root = Path(images_data.get_local_copy())
 images_dir  = images_root / "images"
 logging.info(f"Images downloaded to: {images_dir}")
 
+# Initiate the task 2 to generate mapping of image name and reference description for student model to learn later in the pipeline
 task = Task.init(project_name=project_name, 
                 task_name="step2_desc_caption_generation")
 params = {
@@ -81,6 +82,7 @@ if not annot_file.exists():
 with annot_file.open("r") as f:
     mapping = json.load(f)
 logging.info(f"Loaded {len(mapping)} image→annotation entries")
+
 # build a Path to the JSON file under a subfolder "Desc_Caption_Dataset"
 out_dir = extract_path / project_name / "Desc_Caption_Dataset"
 out_file = out_dir / "desc_caption_dataset.json"
@@ -122,13 +124,16 @@ def build_prompt(annotations):
         objs = ", ".join(set(labels))
         return (
             f"Detected objects: {objs}. "
-            "Generate crisp, complete description of image and background for visually impaired users, "
-            "mentioning count, shape, and approximate distance and position of the detected objects."
+            "Generate a crisp, complete paragraph describing the scene in detail for a visually impaired person. "
+            "Include the count, shape, approximate distance, and relative position of the given detected objects. End the description with a complete sentence."
+            "DO NOT HALLUCINATE."
+
         )
     else:
         return (
-            "Generate crisp, complete description of image and background for visually impaired users. "
-            "Mention count, shape, approximate distance and position of the objects in the image."
+            "Generate a crisp, complete paragraph describing the scene in detail for a visually impaired person. "
+            "Include count, shape, approximate distance and relative position of any objects in the scene. End the description with a complete sentence."
+            "DO NOT HALLUCINATE."
         )
 
 def generate_caption_for_image(image_path: str, prompt: str, processor, model, device: str) -> str:
@@ -137,6 +142,7 @@ def generate_caption_for_image(image_path: str, prompt: str, processor, model, d
     except Exception as e:
         logging.error(f"Error opening image '{image_path}': {e}")
         return ""
+    # Prepare vision-language conversation format
     conversation = [
         {
             "role": "user",
@@ -146,24 +152,37 @@ def generate_caption_for_image(image_path: str, prompt: str, processor, model, d
             ],
         }
     ]
-    # 3. Apply the chat template (inserts vision tokens)
+    # Apply chat template to embed vision tokens into the prompt
     text_prompt = processor.apply_chat_template(conversation, add_generation_prompt=True)
-    # 4. Prepare inputs
+    # Tokenize inputs
     inputs = processor(
         text=[text_prompt],
         images=[image],
         padding=True,
-        return_tensors="pt",
+        return_tensors="pt"
     ).to(device)
+    # Generate caption
     with torch.no_grad():
-      # 5. Generate and decode
-      output_ids = model.generate(**inputs, max_new_tokens=64)
-    # remove the input prefix tokens, then decode
-    generated_ids = [
-        output_ids[i, inputs.input_ids.shape[-1]:] for i in range(output_ids.shape[0])
-    ]
-    captions = processor.batch_decode(generated_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True)
-    return captions[0]
+        output_ids = model.generate(
+            **inputs,
+            max_new_tokens=64,                        
+            temperature=0.7,                           # ↑ Slight creativity
+            top_p=0.9,                                 # ↑ Nucleus sampling
+            repetition_penalty=1.1,                    # ↓ Less repetition
+            #do_sample=True,                            # ↑ Sampling over greedy
+            eos_token_id=processor.tokenizer.eos_token_id,
+            pad_token_id=processor.tokenizer.pad_token_id
+        )
+    # Decode full output (no slicing needed)
+    captions = processor.batch_decode(
+        output_ids,
+        skip_special_tokens=True,
+        clean_up_tokenization_spaces=True
+    )
+    # Log token length for debugging
+    logging.debug(f"Caption length: {len(captions[0].split())} tokens")
+    return captions[0].strip()
+
 
 def desc_generation():
     proc, mdl = load_model_and_processor()
