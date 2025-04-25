@@ -173,9 +173,11 @@ def generate_caption_for_image(image_path: str, prompt: str, processor, model, d
             eos_token_id=processor.tokenizer.eos_token_id,
             pad_token_id=processor.tokenizer.pad_token_id
         )
+    prompt_len = inputs.input_ids.shape[-1]
+    generated_ids = output_ids[:, prompt_len:]
     # Decode full output (no slicing needed)
     captions = processor.batch_decode(
-        output_ids,
+        generated_ids,
         skip_special_tokens=True,
         clean_up_tokenization_spaces=True
     )
