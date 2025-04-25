@@ -27,7 +27,7 @@ task = Task.init(project_name=project_name,
                 task_type=Task.TaskTypes.data_preparation)
 
 params = {
-    'dataset_id': '',                # specific version of the dataset
+    'dataset_id': '2231b5b121924ed684d6560cf6839619',                # specific version of the dataset
     'dataset_name': 'base_dataset'               # latest registered dataset
 }
 
@@ -42,8 +42,10 @@ dataset_name = params['dataset_name']
 if not dataset_id and not dataset_name:
     task.mark_completed(status_message="No dataset provided. Nothing to train on.")
     exit(0)
-
-if dataset_name: 
+if dataset_id: 
+    # download the latest registered dataset
+    server_dataset = Dataset.get(dataset_id=dataset_id, dataset_project="Detection", only_completed=True, alias="base_dataset")
+elif dataset_name: 
     # download the latest registered dataset
     server_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="Detection", only_completed=True, alias="base_dataset")
 
