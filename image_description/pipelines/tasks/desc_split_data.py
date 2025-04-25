@@ -50,6 +50,7 @@ logging.info(f"Loaded {len(mapping)} captions from {caption_file}")
 
 #get the image dataset from "Detection project- base_dataset"
 images_data = Dataset.get(
+    dataset_id="2231b5b121924ed684d6560cf6839619",
     dataset_name="base_dataset",
     dataset_project="Detection",
     only_completed=True,
