@@ -24,7 +24,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(mes
 project_name="Description"
 task = Task.init(project_name=project_name, 
                 task_name="step1_desc_data_preparation",
-                task_type=Task.TaskTypes.data_preparation)
+                task_type=Task.TaskTypes.data_processing)
 
 params = {
     'dataset_id': '2231b5b121924ed684d6560cf6839619',                # specific version of the dataset

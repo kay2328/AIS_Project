@@ -52,7 +52,7 @@ logging.info(f"Images downloaded to: {images_dir}")
 # Initiate the task 2 to generate mapping of image name and reference description for student model to learn later in the pipeline
 task = Task.init(project_name=project_name, 
                 task_name="step2_desc_caption_generation",
-                task_type=Task.TaskTypes.data_preparation)
+                task_type=Task.TaskTypes.data_processing)
 params = {
     'dataset_id': '',                # specific version of the dataset
     'dataset_name': 'Desc_Dataset'               # latest registered dataset
