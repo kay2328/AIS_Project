@@ -44,7 +44,7 @@ if not dataset_id and not dataset_name:
     exit(0)
 if dataset_id: 
     # download the latest registered dataset
-    server_dataset = Dataset.get(dataset_id=dataset_id, dataset_project="Detection", only_completed=True, alias="base_dataset")
+    server_dataset = Dataset.get(dataset_id=dataset_id, only_completed=True, alias="base_dataset")
 elif dataset_name: 
     # download the latest registered dataset
     server_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="Detection", only_completed=True, alias="base_dataset")

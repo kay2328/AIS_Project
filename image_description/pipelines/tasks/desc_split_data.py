@@ -39,7 +39,7 @@ if not dataset_id and not dataset_name:
     exit(0)
 if dataset_name: 
     # download the latest registered dataset
-    server_dataset = Dataset.get(dataset_name=dataset_name, dataset_project=project_name, only_completed=True, alias="desc_split data")
+    server_dataset = Dataset.get(dataset_name=dataset_name, dataset_project=project_name, only_completed=True, alias="desc_split_data")
 
 extract_path = server_dataset.get_local_copy()          
 print(f"Downloaded dataset name: {server_dataset.name} id: ({server_dataset.id}) to: {extract_path}")
@@ -51,8 +51,6 @@ logging.info(f"Loaded {len(mapping)} captions from {caption_file}")
 #get the image dataset from "Detection project- base_dataset"
 images_data = Dataset.get(
     dataset_id="2231b5b121924ed684d6560cf6839619",
-    dataset_name="base_dataset",
-    dataset_project="Detection",
     only_completed=True,
     alias="base_images"  
 )
