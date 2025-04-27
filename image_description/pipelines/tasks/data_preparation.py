@@ -50,50 +50,42 @@ elif dataset_name:
     # download the latest registered dataset
     server_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="Detection", only_completed=True, alias="base_dataset_full")
 
-extract_path = server_dataset.get_local_copy()          
-print(f"Downloaded dataset name: {server_dataset.name} id: ({server_dataset.id}) to: {extract_path}")
+raw_path = server_dataset.get_local_copy()          
+print(f"Downloaded dataset name: {server_dataset.name} id: ({server_dataset.id}) to: {raw_path}")
 
 """
 Prepare dataset.
 """
 
-# download the latest registered dataset
-# ‣ get_local_copy() might give you a folder or a .zip file
-raw_path = Path(server_dataset.get_local_copy())
-logging.info(f"Downloaded dataset to: {raw_path}")
-
-# ─── UNZIP EVERYTHING 
+# ─── UNZIP ALL CONTENTS ──────────────────────────────────────────────────────────
 if raw_path.is_file() and raw_path.suffix.lower() == ".zip":
     extract_root = raw_path.parent / raw_path.stem
     extract_root.mkdir(exist_ok=True)
-    logging.info(f"Extracting full archive {raw_path.name} → {extract_root}")
+    logging.info(f"Unpacking {raw_path.name} → {extract_root}")
     with zipfile.ZipFile(raw_path, "r") as zp:
         zp.extractall(path=extract_root)
     extract_path = extract_root
 else:
     extract_path = raw_path
 
-logging.info(f"Using extract_path = {extract_path}")
+# ─── AUTO-DETECT images/ AND labels/ ────────────────────────────────────────────
+def find_dir_with_most_files(root: Path, name: str) -> Path:
+    """Search recursively for folders named `name` and return the one containing the most files."""
+    best_dir = None
+    best_count = 0
+    for candidate in root.rglob(name):
+        if candidate.is_dir():
+            cnt = sum(1 for _ in candidate.iterdir() if _.is_file())
+            if cnt > best_count:
+                best_dir, best_count = candidate, cnt
+    if not best_dir:
+        raise FileNotFoundError(f"No directory named '{name}' found under {root}")
+    return best_dir
 
-# ─── AUTO-DETECT images/ & labels/ 
-def find_best_dir(root: Path, pattern: str) -> Path:
-    """Return the directory under root that contains the most files matching pattern."""
-    best = None
-    count = 0
-    for d in root.rglob(pattern):
-        if d.is_dir():
-            c = sum(1 for _ in d.iterdir() if _.is_file())
-            if c > count:
-                best, count = d, c
-    if not best:
-        raise FileNotFoundError(f"No folder matching '{pattern}' found under {root}")
-    return best
-
-images_dir = find_best_dir(extract_path, "images")
-labels_dir = find_best_dir(extract_path, "labels")
-
-logging.info(f"Detected images_dir = {images_dir} ({len(list(images_dir.iterdir()))} files)")
-logging.info(f"Detected labels_dir = {labels_dir} ({len(list(labels_dir.iterdir()))} files)")
+images_dir = find_dir_with_most_files(extract_path, "images")
+labels_dir = find_dir_with_most_files(extract_path, "labels")
+logging.info(f"Using images_dir = {images_dir} ({len(list(images_dir.iterdir()))} files)")
+logging.info(f"Using labels_dir = {labels_dir} ({len(list(labels_dir.iterdir()))} files)")
 
 # build a Path to the JSON file under a subfolder "Desc_Dataset"
 out_dir  = extract_path / project_name / "Desc_Dataset"
