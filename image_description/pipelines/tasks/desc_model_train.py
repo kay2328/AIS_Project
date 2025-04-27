@@ -21,6 +21,9 @@ from pycocoevalcap.cider.cider import Cider
 from pycocoevalcap.spice.spice import Spice
 import numpy as np
 import matplotlib.pyplot as plt
+import torch
+from torch.nn.utils.rnn import pad_sequence
+from transformers.models.bart.modeling_bart import shift_tokens_right
 
 task = Task.init(
     project_name="Description",
@@ -93,11 +96,6 @@ BEAM_SIZE = 4
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # 5. Dataset class
-def shift_tokens_right(input_ids, pad_token_id, decoder_start_token_id):
-    from transformers.models.bart.modeling_bart import shift_tokens_right as _shift
-    return _shift(input_ids, pad_token_id, decoder_start_token_id)
-
-
 class CaptionDataset(Dataset):
     def __init__(self, captions_json, image_root, feature_extractor, tokenizer, max_len):
         """
@@ -131,74 +129,133 @@ class CaptionDataset(Dataset):
 
 # 6. Load model and preprocessors
 feature_extractor = ViTFeatureExtractor.from_pretrained(STUDENT_CONFIG["encoder"])
-tokenizer = AutoTokenizer.from_pretrained(STUDENT_CONFIG["decoder"])
+tokenizer         = AutoTokenizer.from_pretrained(STUDENT_CONFIG["decoder"])
 model = VisionEncoderDecoderModel.from_encoder_decoder_pretrained(
-    STUDENT_CONFIG["encoder"], STUDENT_CONFIG["decoder"]
+    STUDENT_CONFIG["encoder"],
+    STUDENT_CONFIG["decoder"],
 )
 tokenizer.add_special_tokens({"pad_token": "[PAD]"})
+# 2) Resize the decoder’s embeddings to match new vocab size
 model.decoder.resize_token_embeddings(len(tokenizer))
 model.config.pad_token_id = tokenizer.pad_token_id
+# Tie special tokens
 model.config.decoder_start_token_id = tokenizer.bos_token_id
-model.config.eos_token_id = tokenizer.eos_token_id
-model.config.max_length = MAX_TARGET_LEN
-model.config.no_repeat_ngram_size = 3
-model.config.num_beams = BEAM_SIZE
-model.config.length_penalty = 2.0
+model.config.eos_token_id           = tokenizer.eos_token_id
+model.config.vocab_size             = model.config.decoder.vocab_size
+model.config.max_length             = MAX_TARGET_LEN
+model.config.early_stopping         = True
+model.config.no_repeat_ngram_size   = 3
+model.config.num_beams              = BEAM_SIZE
+model.config.length_penalty         = 2.0
 model.to(device)
 
 # 7. Prepare datasets & dataloaders
 def collate_fn(batch):
-    pv = torch.stack([b['pixel_values'] for b in batch])
-    labs = torch.stack([b['labels'] for b in batch])
-    decoder_ids = torch.stack([b['decoder_input_ids'] for b in batch])
-    return {'pixel_values': pv, 'labels': labs, 'decoder_input_ids': decoder_ids}
+    # 1) Stack the images
+    pixel_values = torch.stack([ex["pixel_values"] for ex in batch])  # (B, C, H, W)
+
+    # 2) Pad & stack the labels
+    label_seqs = [ex["labels"] for ex in batch]                       # list of [L_i]
+    labels = pad_sequence(label_seqs, batch_first=True,
+                          padding_value=tokenizer.pad_token_id)       # (B, L_max)
+    # Make sure pad tokens are ignored by the loss
+    labels_masked = labels.clone()
+    labels_masked[labels_masked == tokenizer.pad_token_id] = -100
+
+    # 3) Build explicit decoder_input_ids
+    decoder_input_ids = shift_tokens_right(
+        labels,
+        pad_token_id=tokenizer.pad_token_id,
+        decoder_start_token_id=model.config.decoder_start_token_id
+    )
+
+    return {
+        "pixel_values":       pixel_values,
+        "labels":             labels_masked,
+        "decoder_input_ids":  decoder_input_ids,
+    }
 
 train_ds = CaptionDataset(TRAIN_CAPTIONS_JSON, IMAGE_ROOT, feature_extractor, tokenizer, MAX_TARGET_LEN)
-val_ds = CaptionDataset(VAL_CAPTIONS_JSON, IMAGE_ROOT, feature_extractor, tokenizer, MAX_TARGET_LEN)
+val_ds   = CaptionDataset(VAL_CAPTIONS_JSON, IMAGE_ROOT, feature_extractor, tokenizer, MAX_TARGET_LEN)
 
 # 8. Metrics
-bleu = evaluate.load("bleu")
-rouge = evaluate.load("rouge")
-cider = Cider()
-spice = Spice()
+bleu_metric  = evaluate.load("bleu")
+rouge_metric = evaluate.load("rouge")
+cider_scorer = Cider()
+spice_scorer = Spice()
+import numpy as np
 
 def compute_metrics(eval_pred):
     preds, labels = eval_pred
-    decoded_preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
-    labels_mask = np.where(labels == -100, tokenizer.pad_token_id, labels)
-    decoded_labels = tokenizer.batch_decode(labels_mask, skip_special_tokens=True)
-    bleu_score = bleu.compute(predictions=decoded_preds, references=[[r] for r in decoded_labels])['bleu']
-    rouge_res = rouge.compute(predictions=decoded_preds, references=decoded_labels)
-    cider_score, _ = cider.compute_score({i:[decoded_labels[i]] for i in range(len(decoded_labels))},
-                                          {i:[decoded_preds[i]] for i in range(len(decoded_preds))})
-    spice_score, _ = spice.compute_score({i:[decoded_labels[i]] for i in range(len(decoded_labels))},
-                                          {i:[decoded_preds[i]] for i in range(len(decoded_preds))})
-    metrics = {'bleu': bleu_score, 'rouge1': rouge_res['rouge1'], 'rougeL': rouge_res['rougeL'],
-               'cider': cider_score, 'spice': spice_score}
-    logger.report_scalar("eval_metrics", "bleu", iteration=trainer.state.epoch, value=metrics['bleu'])
-    logger.report_scalar("eval_metrics", "cider", iteration=trainer.state.epoch, value=metrics['cider'])
-    return metrics
+
+    # --- decode predictions & labels ---
+    decoded_preds  = tokenizer.batch_decode(preds, skip_special_tokens=True)
+    labels_clean   = np.where(labels == -100, tokenizer.pad_token_id, labels)
+    decoded_labels = tokenizer.batch_decode(labels_clean, skip_special_tokens=True)
+
+    # --- BLEU ---
+    bleu = bleu_metric.compute(
+        predictions=decoded_preds,
+        references=[[ref] for ref in decoded_labels]
+    )["bleu"]
+
+    # --- ROUGE (grab floats directly) ---
+    rouge_res = rouge_metric.compute(
+        predictions=decoded_preds,
+        references=decoded_labels
+    )
+    rouge1 = rouge_res["rouge1"]
+    rougeL = rouge_res["rougeL"]
+
+    # --- CIDEr & SPICE (unchanged) ---
+    refs_dict = {i: [decoded_labels[i]] for i in range(len(decoded_labels))}
+    hyps_dict = {i: [decoded_preds[i]]  for i in range(len(decoded_preds))}
+    cider_score, _ = cider_scorer.compute_score(refs_dict, hyps_dict)
+    spice_score, _ = spice_scorer.compute_score(refs_dict, hyps_dict)
+
+    return {
+        "bleu":   bleu,
+        "rouge1": rouge1,
+        "rougeL": rougeL,
+        "cider":  cider_score,
+        "spice":  spice_score,
+    }
 
 # 9. TrainingArguments & Trainer
-args = Seq2SeqTrainingArguments(
-    output_dir="./outputs",
+# --- 6. TrainingArguments & Trainer ---
+from transformers import Seq2SeqTrainingArguments, Seq2SeqTrainer
+
+class CleanSeq2SeqTrainer(Seq2SeqTrainer):
+    def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
+        # pop Trainer-only args so they don't get forwarded into your model
+        inputs.pop("num_items_in_batch", None)
+        # now call the parent (it expects just model, inputs, return_outputs)
+        return super().compute_loss(model, inputs, return_outputs)
+
+training_args = Seq2SeqTrainingArguments(
+    output_dir=OUTPUT_DIR,
     per_device_train_batch_size=TRAIN_BATCH_SIZE,
     per_device_eval_batch_size=EVAL_BATCH_SIZE,
+    predict_with_generate=True,
+    eval_strategy="epoch",     # run eval (and log eval_loss) at end of each epoch
+    logging_strategy="epoch",        # log train loss every epoch             
+    save_strategy="epoch",
+    save_total_limit=2,
+    weight_decay=0.001,            # L2 regularization on all weights
+    label_smoothing_factor=0.1,   # soften the training targets
     num_train_epochs=NUM_EPOCHS,
     learning_rate=LR,
-    predict_with_generate=True,
-    eval_strategy="epoch",
-    logging_strategy="epoch",
-    save_strategy="epoch",
-    load_best_model_at_end=True,
+    fp16=torch.cuda.is_available(),
+    load_best_model_at_end=True,  # pick the checkpoint with highest cider
     metric_for_best_model="cider",
     greater_is_better=True,
-    report_to=["tensorboard"],
-    logging_dir="./tensorboard_logs"
+    report_to=["tensorboard"],       # enable TensorBoard
+    logging_dir=os.path.join(tensorboard_dir,"tensorboard_logs") 
 )
-trainer = Seq2SeqTrainer(
+
+trainer = CleanSeq2SeqTrainer(
     model=model,
-    args=args,
+    args=training_args,
     train_dataset=train_ds,
     eval_dataset=val_ds,
     data_collator=collate_fn,
