@@ -41,21 +41,45 @@ logging.info(f"Split JSONs located at: {splits_path}")
 
 # 3. Fetch images ZIP from "base_dataset_zip" under "Detection" project
 img_ds = Dataset.get(dataset_project="Detection", dataset_name="base_dataset_zip", only_completed=True, alias="image_data")
-raw_img = Path(img_ds.get_local_copy())
-# if it's a directory containing a zip, find inner zip
-if raw_img.is_dir():
-    inner = list(raw_img.glob("*.zip"))
-    if inner:
-        raw_img = inner[0]
-# unzip full archive
-if raw_img.is_file() and raw_img.suffix.lower() == ".zip":
-    img_root = raw_img.parent / raw_img.stem
-    img_root.mkdir(exist_ok=True)
-    with zipfile.ZipFile(raw_img, "r") as zp:
-        zp.extractall(path=img_root)
+
+images_data = Dataset.get(
+    dataset_id= 'd8316762cb3844569f4c1fbe643ed7f4', #"2231b5b121924ed684d6560cf6839619",
+    only_completed=True,
+    alias="base_images"  
+)
+raw_path = Path(images_data.get_local_copy())
+if raw_path.is_dir():
+    inner_zips = list(raw_path.glob("*.zip"))
+    if inner_zips:
+        zip_path = inner_zips[0]
+        logging.info(f"Found inner zip: {zip_path.name}, will extract that")
+        raw_path = zip_path
+# unzip all contents
+if raw_path.is_file() and raw_path.suffix.lower() == ".zip":
+    extract_root = raw_path.parent / raw_path.stem
+    extract_root.mkdir(exist_ok=True)
+    logging.info(f"Unpacking {raw_path.name} → {extract_root}")
+    with zipfile.ZipFile(raw_path, "r") as zp:
+        zp.extractall(path=extract_root)
+    extract_path = extract_root
 else:
-    img_root = raw_img
-IMAGE_ROOT = img_root
+    extract_path = raw_path
+
+# ─── AUTO-DETECT images/ AND labels/ ────────────────────────────────────────────
+def find_dir_with_most_files(root: Path, name: str) -> Path:
+    """Search recursively for folders named `name` and return the one containing the most files."""
+    best_dir = None
+    best_count = 0
+    for candidate in root.rglob(name):
+        if candidate.is_dir():
+            cnt = sum(1 for _ in candidate.iterdir() if _.is_file())
+            if cnt > best_count:
+                best_dir, best_count = candidate, cnt
+    if not best_dir:
+        raise FileNotFoundError(f"No directory named '{name}' found under {root}")
+    return best_dir
+
+IMAGE_ROOT = find_dir_with_most_files(extract_path, "images")
 logging.info(f"Images located at: {IMAGE_ROOT}")
 
 # 4. Student & training config
