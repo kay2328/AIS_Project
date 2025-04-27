@@ -56,7 +56,12 @@ print(f"Downloaded dataset name: {server_dataset.name} id: ({server_dataset.id})
 """
 Prepare dataset.
 """
-
+if raw_path.is_dir():
+    inner_zips = list(raw_path.glob("*.zip"))
+    if inner_zips:
+        zip_path = inner_zips[0]
+        logging.info(f"Found inner zip: {zip_path.name}, will extract that")
+        raw_path = zip_path
 # ─── UNZIP ALL CONTENTS ──────────────────────────────────────────────────────────
 if raw_path.is_file() and raw_path.suffix.lower() == ".zip":
     extract_root = raw_path.parent / raw_path.stem
