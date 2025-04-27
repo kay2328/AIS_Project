@@ -1,4 +1,11 @@
 from clearml import Task, Dataset
+task = Task.init(
+    project_name="Description",
+    task_name="step4_desc_model_training",
+    task_type=Task.TaskTypes.training
+)
+logger = task.get_logger()
+task.add_requirements_file("requirements.txt")
 import os
 import json
 import logging
@@ -22,13 +29,7 @@ import matplotlib.pyplot as plt
 
 # 1. Initialize ClearML Task
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
-task = Task.init(
-    project_name="Description",
-    task_name="step4_desc_model_training",
-    task_type=Task.TaskTypes.training
-)
-logger = task.get_logger()
-task.add_requirements_file("requirements.txt")
+
 # 2. Fetch split JSON dataset from "Desc_final_dataset" under "Description" project
 split_ds = Dataset.get(dataset_id="41511324658b4cc0a49d3e1c771415f4", only_completed=True, alias="split_data")
 splits_path = Path(split_ds.get_local_copy())
