@@ -26,7 +26,7 @@ import os
 import json
 import logging
 from PIL import Image
-import torch
+import torch, zipfile
 from transformers import AutoProcessor,LlavaForConditionalGeneration, AutoTokenizer
 from clearml import Task, Dataset, Model
 from pathlib import Path
@@ -39,11 +39,20 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 #get the image dataset from "Detection project- base_dataset"
 images_data = Dataset.get(
-    dataset_id="2231b5b121924ed684d6560cf6839619",
+    dataset_id= 'd8316762cb3844569f4c1fbe643ed7f4', #"2231b5b121924ed684d6560cf6839619",
     only_completed=True,
     alias="base_images"  
 )
 images_root = Path(images_data.get_local_copy())
+if images_root.is_file() and images_root.suffix.lower() == ".zip":
+    logging.info(f"Extracting archive {images_root}…")
+    with zipfile.ZipFile(images_root, 'r') as zp:
+        # extract into a sibling folder named after the ZIP (without .zip)
+        target_dir = images_root.parent / images_root.stem
+        zp.extractall(target_dir)
+    images_root = target_dir
+    logging.info(f"Extraction complete; new extract_path = {images_root}")
+
 images_dir  = images_root / "images"
 logging.info(f"Images downloaded to: {images_dir}")
 
