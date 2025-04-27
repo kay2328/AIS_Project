@@ -48,16 +48,6 @@ caption_file = extract_path / "desc_caption_dataset.json"
 mapping = json.loads(open(caption_file, "r").read())
 logging.info(f"Loaded {len(mapping)} captions from {caption_file}")
 
-#get the image dataset from "Detection project- base_dataset"
-images_data = Dataset.get(
-    dataset_id="2231b5b121924ed684d6560cf6839619",
-    only_completed=True,
-    alias="base_images"  
-)
-images_root = Path(images_data.get_local_copy())
-images_dir  = images_root / "images"
-logging.info(f"Images downloaded to: {images_dir}")
-
 # Prepare list of stems
 all_stems = [Path(fn).stem for fn in mapping.keys()]
 

@@ -51,7 +51,7 @@ if raw_path.is_dir():
         zip_path = inner_zips[0]
         logging.info(f"Found inner zip: {zip_path.name}, will extract that")
         raw_path = zip_path
-# ─── UNZIP ALL CONTENTS ──────────────────────────────────────────────────────────
+# unzip all contents
 if raw_path.is_file() and raw_path.suffix.lower() == ".zip":
     extract_root = raw_path.parent / raw_path.stem
     extract_root.mkdir(exist_ok=True)
