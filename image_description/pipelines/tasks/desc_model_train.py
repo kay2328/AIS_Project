@@ -89,8 +89,8 @@ logging.info(f"Images located at: {IMAGE_ROOT}")
 STUDENT_CONFIG = {"encoder": "google/vit-base-patch16-224-in21k", "decoder": "distilgpt2"}
 TRAIN_BATCH_SIZE = 16
 EVAL_BATCH_SIZE = 16
-NUM_EPOCHS = 30
-LR = 3.5e-5
+NUM_EPOCHS = 10
+LR = 5e-5
 MAX_TARGET_LEN = 64
 BEAM_SIZE = 4
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
