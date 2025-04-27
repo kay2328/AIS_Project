@@ -5,7 +5,7 @@ task = Task.init(
     task_type=Task.TaskTypes.training
 )
 logger = task.get_logger()
-task.add_requirements_file("requirements.txt")
+task.add_requirements("requirements.txt")
 import os
 import json
 import logging
