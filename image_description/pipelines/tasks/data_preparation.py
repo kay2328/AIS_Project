@@ -50,7 +50,7 @@ elif dataset_name:
     # download the latest registered dataset
     server_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="Detection", only_completed=True, alias="base_dataset_full")
 
-raw_path = server_dataset.get_local_copy()          
+raw_path = Path(server_dataset.get_local_copy())          
 print(f"Downloaded dataset name: {server_dataset.name} id: ({server_dataset.id}) to: {raw_path}")
 
 """
