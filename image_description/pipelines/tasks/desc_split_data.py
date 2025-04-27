@@ -1,10 +1,9 @@
 import os
-#import shutil
 from pathlib import Path
 import logging
 import json
 from sklearn.model_selection import train_test_split
-from clearml import Task, Dataset, StorageManager
+from clearml import Task, Dataset
 
 
 # Configure logging
