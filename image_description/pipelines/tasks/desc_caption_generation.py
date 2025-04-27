@@ -28,7 +28,7 @@ import logging
 from PIL import Image
 import torch, zipfile
 from transformers import AutoProcessor,LlavaForConditionalGeneration, AutoTokenizer
-from clearml import Task, Dataset, Model
+from clearml import Task, Dataset
 from pathlib import Path
 
 # Configure logging
@@ -43,18 +43,41 @@ images_data = Dataset.get(
     only_completed=True,
     alias="base_images"  
 )
-images_root = Path(images_data.get_local_copy())
-if images_root.is_file() and images_root.suffix.lower() == ".zip":
-    logging.info(f"Extracting archive {images_root}…")
-    with zipfile.ZipFile(images_root, 'r') as zp:
-        # extract into a sibling folder named after the ZIP (without .zip)
-        target_dir = images_root.parent / images_root.stem
-        zp.extractall(target_dir)
-    images_root = target_dir
-    logging.info(f"Extraction complete; new extract_path = {images_root}")
+raw_path = Path(images_data.get_local_copy())
 
-images_dir  = images_root / "images"
-logging.info(f"Images downloaded to: {images_dir}")
+if raw_path.is_dir():
+    inner_zips = list(raw_path.glob("*.zip"))
+    if inner_zips:
+        zip_path = inner_zips[0]
+        logging.info(f"Found inner zip: {zip_path.name}, will extract that")
+        raw_path = zip_path
+# ─── UNZIP ALL CONTENTS ──────────────────────────────────────────────────────────
+if raw_path.is_file() and raw_path.suffix.lower() == ".zip":
+    extract_root = raw_path.parent / raw_path.stem
+    extract_root.mkdir(exist_ok=True)
+    logging.info(f"Unpacking {raw_path.name} → {extract_root}")
+    with zipfile.ZipFile(raw_path, "r") as zp:
+        zp.extractall(path=extract_root)
+    extract_path = extract_root
+else:
+    extract_path = raw_path
+
+# ─── AUTO-DETECT images/ AND labels/ ────────────────────────────────────────────
+def find_dir_with_most_files(root: Path, name: str) -> Path:
+    """Search recursively for folders named `name` and return the one containing the most files."""
+    best_dir = None
+    best_count = 0
+    for candidate in root.rglob(name):
+        if candidate.is_dir():
+            cnt = sum(1 for _ in candidate.iterdir() if _.is_file())
+            if cnt > best_count:
+                best_dir, best_count = candidate, cnt
+    if not best_dir:
+        raise FileNotFoundError(f"No directory named '{name}' found under {root}")
+    return best_dir
+
+images_dir = find_dir_with_most_files(extract_path, "images")
+logging.info(f"Using images_dir = {images_dir} ({len(list(images_dir.iterdir()))} files)")
 
 # Initiate the task 2 to generate mapping of image name and reference description for student model to learn later in the pipeline
 task = Task.init(project_name=project_name, 
