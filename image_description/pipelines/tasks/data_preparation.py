@@ -58,34 +58,41 @@ Prepare dataset.
 
 # download the latest registered dataset
 extract_path = Path(extract_path)
-print(f"Downloaded dataset to: {extract_path}")
+logging.info(f"Downloaded dataset to: {extract_path}")
 
+# 1) Unzip if we got a .zip file
 if extract_path.is_file() and extract_path.suffix.lower() == ".zip":
-    logging.info(f"Extracting archive {extract_path.name}…")
+    logging.info(f"Extracting {extract_path.name} …")
     with zipfile.ZipFile(extract_path, 'r') as zp:
         target_dir = extract_path.parent / extract_path.stem
         zp.extractall(target_dir)
     extract_path = target_dir
     logging.info(f"Extraction complete; new extract_path = {extract_path}")
 
-# Define where we *expect* to find images & labels
+# (Optional) dump contents to debug
+logging.debug(f"Top-level folders/files under dataset: {[p.name for p in extract_path.iterdir()]}")
+
+# 2) Try top-level first
 images_dir = extract_path / "images"
 labels_dir = extract_path / "labels"
 
-# 2) If that directory layout isn’t present, search one level down
-if not images_dir.is_dir() or not labels_dir.is_dir():
-    logging.warning(f"No images/ or labels/ under {extract_path}, searching subfolders…")
-    for sub in extract_path.iterdir():
-        if sub.is_dir() and (sub / "images").is_dir() and (sub / "labels").is_dir():
-            images_dir = sub / "images"
-            labels_dir = sub / "labels"
-            logging.info(f"Found images/labels under nested folder: {sub.name}")
+# 3) If not present, search recursively for ANY folder that has both subfolders
+if not (images_dir.is_dir() and labels_dir.is_dir()):
+    logging.warning(f"No images/ + labels/ at top of {extract_path}, searching recursively …")
+    found = False
+    for img_dir in extract_path.rglob("images"):
+        parent = img_dir.parent
+        if (parent / "labels").is_dir():
+            images_dir = img_dir
+            labels_dir = parent / "labels"
+            logging.info(f"→ Found images/ + labels/ under: {parent}")
+            found = True
             break
-    else:
-        raise FileNotFoundError(f"Could not locate an images/ and labels/ folder under {extract_path}")
+    if not found:
+        raise FileNotFoundError(f"Could not locate images/ + labels/ anywhere under {extract_path}")
 
-# from here on, you can safely iterate images_dir.iterdir() etc.
-logging.info(f"Using images from {images_dir} and labels from {labels_dir}")
+logging.info(f"Using images from: {images_dir}")
+logging.info(f"Using labels from: {labels_dir}")
 
 # build a Path to the JSON file under a subfolder "Desc_Dataset"
 out_dir  = extract_path / project_name / "Desc_Dataset"
