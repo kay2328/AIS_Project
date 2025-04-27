@@ -28,7 +28,7 @@ task = Task.init(
     task_type=Task.TaskTypes.training
 )
 logger = task.get_logger()
-
+task.add_requirements_file("requirements.txt")
 # 2. Fetch split JSON dataset from "Desc_final_dataset" under "Description" project
 split_ds = Dataset.get(dataset_id="41511324658b4cc0a49d3e1c771415f4", only_completed=True, alias="split_data")
 splits_path = Path(split_ds.get_local_copy())
