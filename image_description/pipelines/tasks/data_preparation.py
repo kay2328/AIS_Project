@@ -1,6 +1,6 @@
 from clearml import Task, Dataset, Model
 import json
-import logging
+import logging, zipfile
 from typing import List, Optional, Dict, Any
 from pathlib import Path
 """
@@ -27,8 +27,8 @@ task = Task.init(project_name=project_name,
                 task_type=Task.TaskTypes.data_processing)
 
 params = {
-    'dataset_id': '2231b5b121924ed684d6560cf6839619',                # specific version of the dataset
-    'dataset_name': 'base_dataset'               # latest registered dataset
+    'dataset_id': 'd8316762cb3844569f4c1fbe643ed7f4',     #'2231b5b121924ed684d6560cf6839619', specific version of the dataset
+    'dataset_name': 'base_dataset_zip'               # latest registered dataset
 }
 
 # logger = task.get_logger()
@@ -44,17 +44,31 @@ if not dataset_id and not dataset_name:
     exit(0)
 if dataset_id: 
     # download the latest registered dataset
-    server_dataset = Dataset.get(dataset_id=dataset_id, only_completed=True, alias="base_dataset")
+    server_dataset = Dataset.get(dataset_id=dataset_id, only_completed=True, alias="base_dataset_full")
 elif dataset_name: 
     # download the latest registered dataset
-    server_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="Detection", only_completed=True, alias="base_dataset")
+    server_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="Detection", only_completed=True, alias="base_dataset_full")
 
 extract_path = server_dataset.get_local_copy()          
 print(f"Downloaded dataset name: {server_dataset.name} id: ({server_dataset.id}) to: {extract_path}")
+
 """
 Prepare dataset.
 """
+
+# download the latest registered dataset
 extract_path = Path(extract_path)
+print(f"Downloaded dataset to: {extract_path}")
+
+if extract_path.is_file() and extract_path.suffix.lower() == ".zip":
+    logging.info(f"Extracting archive {extract_path}…")
+    with zipfile.ZipFile(extract_path, 'r') as zp:
+        # extract into a sibling folder named after the ZIP (without .zip)
+        target_dir = extract_path.parent / extract_path.stem
+        zp.extractall(target_dir)
+    extract_path = target_dir
+    logging.info(f"Extraction complete; new extract_path = {extract_path}")
+
 # get image file prefix that has corresponding labels
 images_dir = extract_path / "images"
 labels_dir = extract_path / "labels"
