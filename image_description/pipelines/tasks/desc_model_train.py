@@ -1,11 +1,6 @@
 from clearml import Task, Dataset
-task = Task.init(
-    project_name="Description",
-    task_name="step4_desc_model_training",
-    task_type=Task.TaskTypes.training
-)
-logger = task.get_logger()
-task.add_requirements("requirements.txt")
+Task.add_requirements("requirements.txt")
+
 import os
 import json
 import logging
@@ -27,6 +22,12 @@ from pycocoevalcap.spice.spice import Spice
 import numpy as np
 import matplotlib.pyplot as plt
 
+task = Task.init(
+    project_name="Description",
+    task_name="step4_desc_model_training",
+    task_type=Task.TaskTypes.training
+)
+logger = task.get_logger()
 # 1. Initialize ClearML Task
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
 
