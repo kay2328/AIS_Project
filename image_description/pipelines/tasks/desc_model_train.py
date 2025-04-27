@@ -224,6 +224,11 @@ def compute_metrics(eval_pred):
 # 9. TrainingArguments & Trainer
 # --- 6. TrainingArguments & Trainer ---
 from transformers import Seq2SeqTrainingArguments, Seq2SeqTrainer
+# where to save checkpoints/logs locally
+OUTPUT_DIR = extract_path / "outputs" / "models"
+tensorboard_dir = extract_path/ "outputs" / "tensorboard_logs"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+tensorboard_dir.mkdir(parents=True, exist_ok=True)
 
 class CleanSeq2SeqTrainer(Seq2SeqTrainer):
     def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
@@ -250,7 +255,7 @@ training_args = Seq2SeqTrainingArguments(
     metric_for_best_model="cider",
     greater_is_better=True,
     report_to=["tensorboard"],       # enable TensorBoard
-    logging_dir=os.path.join(tensorboard_dir,"tensorboard_logs") 
+    logging_dir=tensorboard_dir
 )
 
 trainer = CleanSeq2SeqTrainer(
@@ -280,7 +285,8 @@ logger.report_matplotlib("training_plot", "loss_curve", f)
 best_ckpt = trainer.state.best_model_checkpoint
 task.get_logger().report_text(f"Best checkpoint at: {best_ckpt}")
 best_model = VisionEncoderDecoderModel.from_pretrained(best_ckpt)
-best_dir = "./best_model"
+best_dir = extract_path / "outputs"/ "best_model"
+best_dir.mkdir(parents=True, exist_ok=True)
 best_model.save_pretrained(best_dir)
 tokenizer.save_pretrained(best_dir)
 feature_extractor.save_pretrained(best_dir)
