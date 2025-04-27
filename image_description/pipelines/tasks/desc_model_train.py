@@ -97,11 +97,17 @@ def shift_tokens_right(input_ids, pad_token_id, decoder_start_token_id):
     from transformers.models.bart.modeling_bart import shift_tokens_right as _shift
     return _shift(input_ids, pad_token_id, decoder_start_token_id)
 
-class CaptionDataset(TorchDataset):
+
+class CaptionDataset(Dataset):
     def __init__(self, captions_json, image_root, feature_extractor, tokenizer, max_len):
+        """
+        captions_json: list of {"image": "path.jpg", "caption": "…"}
+        """
+        import json
         raw = json.load(open(captions_json))
         if isinstance(raw, dict) and all(isinstance(v, str) for v in raw.values()):
-            self.data = [{"image": k, "caption": v} for k, v in raw.items()]
+            # transform to list of {"image": ..., "caption": ...}
+            self.data = [{"image": img_name, "caption": cap_text} for img_name, cap_text in raw.items()]
         else:
             self.data = raw
         self.image_root = image_root
@@ -114,18 +120,14 @@ class CaptionDataset(TorchDataset):
 
     def __getitem__(self, idx):
         item = self.data[idx]
-        img = Image.open(self.image_root / item["image"]).convert("RGB")
-        pixel = self.fe(images=img, return_tensors="pt").pixel_values.squeeze()
-        toks = self.tk(
-            item["caption"], padding="max_length", truncation=True,
-            max_length=self.max_len, return_tensors="pt"
-        )
-        labels = toks.input_ids.squeeze()
-        labels[labels == self.tk.pad_token_id] = -100
-        decoder_input_ids = shift_tokens_right(
-            toks.input_ids.squeeze(), self.tk.pad_token_id,  self.tk.bos_token_id
-        )
-        return {"pixel_values": pixel, "labels": labels, "decoder_input_ids": decoder_input_ids}
+        img = Image.open(os.path.join(self.image_root, item["image"])).convert("RGB")
+        pixel_values = self.fe(images=img, return_tensors="pt").pixel_values.squeeze()
+        tokenized = self.tk(
+            item["caption"], padding="max_length", truncation=True, max_length=self.max_len, return_tensors="pt")
+        labels = tokenized.input_ids.squeeze()
+        labels[labels == self.tk.pad_token_id] = -100  # ignore pad in loss
+        return {"pixel_values": pixel_values, "labels": labels}
+
 
 # 6. Load model and preprocessors
 feature_extractor = ViTFeatureExtractor.from_pretrained(STUDENT_CONFIG["encoder"])
