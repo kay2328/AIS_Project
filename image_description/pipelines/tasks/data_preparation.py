@@ -61,17 +61,31 @@ extract_path = Path(extract_path)
 print(f"Downloaded dataset to: {extract_path}")
 
 if extract_path.is_file() and extract_path.suffix.lower() == ".zip":
-    logging.info(f"Extracting archive {extract_path}…")
+    logging.info(f"Extracting archive {extract_path.name}…")
     with zipfile.ZipFile(extract_path, 'r') as zp:
-        # extract into a sibling folder named after the ZIP (without .zip)
         target_dir = extract_path.parent / extract_path.stem
         zp.extractall(target_dir)
     extract_path = target_dir
     logging.info(f"Extraction complete; new extract_path = {extract_path}")
 
-# get image file prefix that has corresponding labels
+# Define where we *expect* to find images & labels
 images_dir = extract_path / "images"
 labels_dir = extract_path / "labels"
+
+# 2) If that directory layout isn’t present, search one level down
+if not images_dir.is_dir() or not labels_dir.is_dir():
+    logging.warning(f"No images/ or labels/ under {extract_path}, searching subfolders…")
+    for sub in extract_path.iterdir():
+        if sub.is_dir() and (sub / "images").is_dir() and (sub / "labels").is_dir():
+            images_dir = sub / "images"
+            labels_dir = sub / "labels"
+            logging.info(f"Found images/labels under nested folder: {sub.name}")
+            break
+    else:
+        raise FileNotFoundError(f"Could not locate an images/ and labels/ folder under {extract_path}")
+
+# from here on, you can safely iterate images_dir.iterdir() etc.
+logging.info(f"Using images from {images_dir} and labels from {labels_dir}")
 
 # build a Path to the JSON file under a subfolder "Desc_Dataset"
 out_dir  = extract_path / project_name / "Desc_Dataset"
