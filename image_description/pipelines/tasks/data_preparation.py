@@ -28,7 +28,8 @@ task = Task.init(project_name=project_name,
 
 params = {
     'dataset_id': 'd8316762cb3844569f4c1fbe643ed7f4',     #'2231b5b121924ed684d6560cf6839619', specific version of the dataset
-    'dataset_name': 'base_dataset_zip'               # latest registered dataset
+    'dataset_name': 'base_dataset_zip',               # latest registered dataset
+    "dataset_project": "Detection",
 }
 
 # logger = task.get_logger()
@@ -57,42 +58,42 @@ Prepare dataset.
 """
 
 # download the latest registered dataset
-extract_path = Path(extract_path)
-logging.info(f"Downloaded dataset to: {extract_path}")
+# ‣ get_local_copy() might give you a folder or a .zip file
+raw_path = Path(server_dataset.get_local_copy())
+logging.info(f"Downloaded dataset to: {raw_path}")
 
-# 1) Unzip if we got a .zip file
-if extract_path.is_file() and extract_path.suffix.lower() == ".zip":
-    logging.info(f"Extracting {extract_path.name} …")
-    with zipfile.ZipFile(extract_path, 'r') as zp:
-        target_dir = extract_path.parent / extract_path.stem
-        zp.extractall(target_dir)
-    extract_path = target_dir
-    logging.info(f"Extraction complete; new extract_path = {extract_path}")
+# ─── UNZIP EVERYTHING 
+if raw_path.is_file() and raw_path.suffix.lower() == ".zip":
+    extract_root = raw_path.parent / raw_path.stem
+    extract_root.mkdir(exist_ok=True)
+    logging.info(f"Extracting full archive {raw_path.name} → {extract_root}")
+    with zipfile.ZipFile(raw_path, "r") as zp:
+        zp.extractall(path=extract_root)
+    extract_path = extract_root
+else:
+    extract_path = raw_path
 
-# (Optional) dump contents to debug
-logging.debug(f"Top-level folders/files under dataset: {[p.name for p in extract_path.iterdir()]}")
+logging.info(f"Using extract_path = {extract_path}")
 
-# 2) Try top-level first
-images_dir = extract_path / "images"
-labels_dir = extract_path / "labels"
+# ─── AUTO-DETECT images/ & labels/ 
+def find_best_dir(root: Path, pattern: str) -> Path:
+    """Return the directory under root that contains the most files matching pattern."""
+    best = None
+    count = 0
+    for d in root.rglob(pattern):
+        if d.is_dir():
+            c = sum(1 for _ in d.iterdir() if _.is_file())
+            if c > count:
+                best, count = d, c
+    if not best:
+        raise FileNotFoundError(f"No folder matching '{pattern}' found under {root}")
+    return best
 
-# 3) If not present, search recursively for ANY folder that has both subfolders
-if not (images_dir.is_dir() and labels_dir.is_dir()):
-    logging.warning(f"No images/ + labels/ at top of {extract_path}, searching recursively …")
-    found = False
-    for img_dir in extract_path.rglob("images"):
-        parent = img_dir.parent
-        if (parent / "labels").is_dir():
-            images_dir = img_dir
-            labels_dir = parent / "labels"
-            logging.info(f"→ Found images/ + labels/ under: {parent}")
-            found = True
-            break
-    if not found:
-        raise FileNotFoundError(f"Could not locate images/ + labels/ anywhere under {extract_path}")
+images_dir = find_best_dir(extract_path, "images")
+labels_dir = find_best_dir(extract_path, "labels")
 
-logging.info(f"Using images from: {images_dir}")
-logging.info(f"Using labels from: {labels_dir}")
+logging.info(f"Detected images_dir = {images_dir} ({len(list(images_dir.iterdir()))} files)")
+logging.info(f"Detected labels_dir = {labels_dir} ({len(list(labels_dir.iterdir()))} files)")
 
 # build a Path to the JSON file under a subfolder "Desc_Dataset"
 out_dir  = extract_path / project_name / "Desc_Dataset"
