@@ -1,13 +1,12 @@
-from clearml import Task, Dataset
+from clearml import Task, Dataset, OutputModel
 Task.add_requirements("requirements.txt")
-
 import os
 import json
 import logging
 import zipfile
 from pathlib import Path
 import torch
-from torch.utils.data import Dataset as TorchDataset, DataLoader
+import shutil
 from PIL import Image
 from transformers import (
     VisionEncoderDecoderModel,
@@ -18,22 +17,37 @@ from transformers import (
 )
 import evaluate
 from pycocoevalcap.cider.cider import Cider
-from pycocoevalcap.spice.spice import Spice
+#from pycocoevalcap.spice.spice import Spice
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
+import sys
+import tempfile
 from torch.nn.utils.rnn import pad_sequence
 from transformers.models.bart.modeling_bart import shift_tokens_right
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../src')))
+from enigmaai.config import Project, ConfigFactory
 
+
+# 1. Initialize ClearML Task
 task = Task.init(
     project_name="Description",
     task_name="step4_desc_model_training",
     task_type=Task.TaskTypes.training
 )
 logger = task.get_logger()
-# 1. Initialize ClearML Task
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
 
+# get project configurations
+project = ConfigFactory.get_config(Project.SCENE_DESCRIPTION)
+project_name = project.get('project-name')
+working_dir = Path(tempfile.mkdtemp()) / project_name
+working_dir.mkdir(parents=True, exist_ok=True)    
+print("Working temp directory at:", working_dir)
+
+"""
+Dataset for training
+"""
 # 2. Fetch split JSON dataset from "Desc_final_dataset" under "Description" project
 split_ds = Dataset.get(dataset_id="41511324658b4cc0a49d3e1c771415f4", only_completed=True, alias="split_data")
 splits_path = Path(split_ds.get_local_copy())
@@ -43,10 +57,10 @@ TEST_CAPTIONS_JSON = splits_path / "test.json"
 logging.info(f"Split JSONs located at: {splits_path}")
 
 # 3. Fetch images ZIP from "base_dataset_zip" under "Detection" project
-img_ds = Dataset.get(dataset_project="Detection", dataset_name="base_dataset_zip", only_completed=True, alias="image_data")
+#img_ds = Dataset.get(dataset_project="Detection", dataset_name="base_dataset_zip", only_completed=True, alias="image_data")
 
 images_data = Dataset.get(
-    dataset_id= 'd8316762cb3844569f4c1fbe643ed7f4', #"2231b5b121924ed684d6560cf6839619",
+    dataset_id= '1201a0351b6442f1ba12245d5db779a1', #"2231b5b121924ed684d6560cf6839619",
     only_completed=True,
     alias="base_images"  
 )
@@ -68,7 +82,7 @@ if raw_path.is_file() and raw_path.suffix.lower() == ".zip":
 else:
     extract_path = raw_path
 
-# ─── AUTO-DETECT images/ AND labels/ ────────────────────────────────────────────
+# DETECT images
 def find_dir_with_most_files(root: Path, name: str) -> Path:
     """Search recursively for folders named `name` and return the one containing the most files."""
     best_dir = None
@@ -85,12 +99,15 @@ def find_dir_with_most_files(root: Path, name: str) -> Path:
 IMAGE_ROOT = find_dir_with_most_files(extract_path, "images")
 logging.info(f"Images located at: {IMAGE_ROOT}")
 
+"""
+Student model training configuration and set up
+"""
 # 4. Student & training config
 STUDENT_CONFIG = {"encoder": "google/vit-base-patch16-224-in21k", "decoder": "distilgpt2"}
 TRAIN_BATCH_SIZE = 16
 EVAL_BATCH_SIZE = 16
-NUM_EPOCHS = 10
-LR = 5e-5
+NUM_EPOCHS = 5 
+LR = 1e-4
 MAX_TARGET_LEN = 64
 BEAM_SIZE = 4
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -101,7 +118,6 @@ class CaptionDataset(Dataset):
         """
         captions_json: list of {"image": "path.jpg", "caption": "…"}
         """
-        import json
         raw = json.load(open(captions_json))
         if isinstance(raw, dict) and all(isinstance(v, str) for v in raw.values()):
             # transform to list of {"image": ..., "caption": ...}
@@ -126,7 +142,6 @@ class CaptionDataset(Dataset):
         labels[labels == self.tk.pad_token_id] = -100  # ignore pad in loss
         return {"pixel_values": pixel_values, "labels": labels}
 
-
 # 6. Load model and preprocessors
 feature_extractor = ViTFeatureExtractor.from_pretrained(STUDENT_CONFIG["encoder"])
 tokenizer         = AutoTokenizer.from_pretrained(STUDENT_CONFIG["decoder"])
@@ -135,7 +150,7 @@ model = VisionEncoderDecoderModel.from_encoder_decoder_pretrained(
     STUDENT_CONFIG["decoder"],
 )
 tokenizer.add_special_tokens({"pad_token": "[PAD]"})
-# 2) Resize the decoder’s embeddings to match new vocab size
+# Resize the decoder’s embeddings to match new vocab size
 model.decoder.resize_token_embeddings(len(tokenizer))
 model.config.pad_token_id = tokenizer.pad_token_id
 # Tie special tokens
@@ -152,23 +167,20 @@ model.to(device)
 # 7. Prepare datasets & dataloaders
 def collate_fn(batch):
     # 1) Stack the images
-    pixel_values = torch.stack([ex["pixel_values"] for ex in batch])  # (B, C, H, W)
-
+    pixel_values = torch.stack([ex["pixel_values"] for ex in batch])  
     # 2) Pad & stack the labels
-    label_seqs = [ex["labels"] for ex in batch]                       # list of [L_i]
+    label_seqs = [ex["labels"] for ex in batch]                      
     labels = pad_sequence(label_seqs, batch_first=True,
-                          padding_value=tokenizer.pad_token_id)       # (B, L_max)
+                          padding_value=tokenizer.pad_token_id)      
     # Make sure pad tokens are ignored by the loss
     labels_masked = labels.clone()
     labels_masked[labels_masked == tokenizer.pad_token_id] = -100
-
     # 3) Build explicit decoder_input_ids
     decoder_input_ids = shift_tokens_right(
         labels,
         pad_token_id=tokenizer.pad_token_id,
         decoder_start_token_id=model.config.decoder_start_token_id
     )
-
     return {
         "pixel_values":       pixel_values,
         "labels":             labels_masked,
@@ -178,27 +190,26 @@ def collate_fn(batch):
 train_ds = CaptionDataset(TRAIN_CAPTIONS_JSON, IMAGE_ROOT, feature_extractor, tokenizer, MAX_TARGET_LEN)
 val_ds   = CaptionDataset(VAL_CAPTIONS_JSON, IMAGE_ROOT, feature_extractor, tokenizer, MAX_TARGET_LEN)
 
+"""
+Metrics for model validation
+"""
 # 8. Metrics
 bleu_metric  = evaluate.load("bleu")
 rouge_metric = evaluate.load("rouge")
 cider_scorer = Cider()
-spice_scorer = Spice()
-import numpy as np
+#spice_scorer = Spice()
 
 def compute_metrics(eval_pred):
     preds, labels = eval_pred
-
     # --- decode predictions & labels ---
     decoded_preds  = tokenizer.batch_decode(preds, skip_special_tokens=True)
     labels_clean   = np.where(labels == -100, tokenizer.pad_token_id, labels)
     decoded_labels = tokenizer.batch_decode(labels_clean, skip_special_tokens=True)
-
     # --- BLEU ---
     bleu = bleu_metric.compute(
         predictions=decoded_preds,
         references=[[ref] for ref in decoded_labels]
     )["bleu"]
-
     # --- ROUGE (grab floats directly) ---
     rouge_res = rouge_metric.compute(
         predictions=decoded_preds,
@@ -206,27 +217,27 @@ def compute_metrics(eval_pred):
     )
     rouge1 = rouge_res["rouge1"]
     rougeL = rouge_res["rougeL"]
-
     # --- CIDEr & SPICE (unchanged) ---
     refs_dict = {i: [decoded_labels[i]] for i in range(len(decoded_labels))}
     hyps_dict = {i: [decoded_preds[i]]  for i in range(len(decoded_preds))}
     cider_score, _ = cider_scorer.compute_score(refs_dict, hyps_dict)
-    spice_score, _ = spice_scorer.compute_score(refs_dict, hyps_dict)
-
+    #spice_score, _ = spice_scorer.compute_score(refs_dict, hyps_dict)
     return {
         "bleu":   bleu,
         "rouge1": rouge1,
         "rougeL": rougeL,
         "cider":  cider_score,
-        "spice":  spice_score,
+        #"spice":  spice_score,
     }
 
+"""
+Model Training
+"""
 # 9. TrainingArguments & Trainer
-# --- 6. TrainingArguments & Trainer ---
 from transformers import Seq2SeqTrainingArguments, Seq2SeqTrainer
-# where to save checkpoints/logs locally
-OUTPUT_DIR = extract_path / "outputs" / "models"
-tensorboard_dir = extract_path/ "outputs" / "tensorboard_logs"
+# save checkpoints/logs 
+OUTPUT_DIR = working_dir / "outputs" / "models"
+tensorboard_dir = working_dir/ "outputs" / "tensorboard_logs"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 tensorboard_dir.mkdir(parents=True, exist_ok=True)
 
@@ -255,9 +266,9 @@ training_args = Seq2SeqTrainingArguments(
     metric_for_best_model="cider",
     greater_is_better=True,
     report_to=["tensorboard"],       # enable TensorBoard
-    logging_dir=tensorboard_dir
+    logging_dir=tensorboard_dir,
+    disable_tqdm=True
 )
-
 trainer = CleanSeq2SeqTrainer(
     model=model,
     args=training_args,
@@ -268,8 +279,11 @@ trainer = CleanSeq2SeqTrainer(
 )
 
 # 10. Train
-trainer.train()
+results = trainer.train()
 
+"""
+Plotting loss curve graphs
+"""
 # 11. Plot loss curve and log to ClearML
 history = trainer.state.log_history
 epochs = [h['epoch'] for h in history if 'loss' in h]
@@ -279,24 +293,40 @@ ax.plot(epochs, losses, marker='o')
 ax.set_xlabel('Epoch')
 ax.set_ylabel('Training Loss')
 ax.set_title('Loss Curve')
-logger.report_matplotlib("training_plot", "loss_curve", f)
+logger.report_matplotlib_figure("training_plot", "loss_curve", f)
 
+"""
+Saving best model after training and uploading artifacts
+"""
 # 12. Save best model and artifacts
 best_ckpt = trainer.state.best_model_checkpoint
 task.get_logger().report_text(f"Best checkpoint at: {best_ckpt}")
 best_model = VisionEncoderDecoderModel.from_pretrained(best_ckpt)
-best_dir = extract_path / "outputs"/ "best_model"
+best_dir = working_dir / "outputs"/ "best_model"
 best_dir.mkdir(parents=True, exist_ok=True)
 best_model.save_pretrained(best_dir)
 tokenizer.save_pretrained(best_dir)
 feature_extractor.save_pretrained(best_dir)
 task.upload_artifact(name="best_model", artifact_object=best_dir)
+result_file = working_dir / "outputs" / "results.csv"
+task.upload_artifact(name="results", artifact_object=result_file)
 
-# 13. Final evaluation on test set
-test_ds = CaptionDataset(TEST_CAPTIONS_JSON, IMAGE_ROOT, feature_extractor, tokenizer, MAX_TARGET_LEN)
-res = trainer.evaluate(eval_dataset=test_ds)
-for k, v in res.items():
-    logger.report_scalar("test_metrics", k, iteration=0, value=v)
-    logging.info(f"Test {k}: {v}")
+# Zip entire folder
+#zip_path = best_dir.with_suffix(".zip")                   # e.g. best_model_export.zip
+#shutil.make_archive(base_name=str(best_dir), format="zip", root_dir=str(best_dir))
 
+# Register it as an OutputModel
+task = Task.current_task()
+output_model = OutputModel(
+    task=task,
+    name="student_desc_model",    
+    framework="pytorch"
+)
+# Upload the ZIP as the model weights
+output_model.update_weights(weights_filename=str(zip_path))
+print("Registered model id:", output_model.id)
+#output_model = task.models.output[0] 
+#task.set_parameter("output_model_project", project_name)
+#task.set_parameter("output_model_id", output_model.id)
+#task.set_parameter("output_model_name", output_model.name)
 logging.info("Student training on ClearML complete.")
