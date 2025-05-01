@@ -29,7 +29,7 @@ task = Task.init(project_name=project_name,
                 task_name="step1_desc_basedata_preparation",
                 task_type=Task.TaskTypes.data_processing)
 params = {
-    'base_dataset_id': '26083b24ab0c47219a5e4f3fe026b085',#'2231b5b121924ed684d6560cf6839619',     # specific version of the dataset
+    'base_dataset_id': '', #'26083b24ab0c47219a5e4f3fe026b085',#'2231b5b121924ed684d6560cf6839619',     # specific version of the dataset
     'base_dataset_name': 'base_dataset_zip',               # latest registered dataset
 }
 

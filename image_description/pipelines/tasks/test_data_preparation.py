@@ -29,7 +29,7 @@ task = Task.init(project_name=project_name,
                 task_type=Task.TaskTypes.data_processing)
 
 params = {
-    'eval_dataset_id': 'e19da140dd6a479c864dd7bdf930918d',
+    'eval_dataset_id': '', #'e19da140dd6a479c864dd7bdf930918d',
     'eval_dataset_name':'eval_dataset_zip'
 }
 

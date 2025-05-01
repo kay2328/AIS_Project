@@ -1,8 +1,7 @@
 import sys
 import os
 from clearml import Task, Dataset, Model
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../src')))
-Task.add_requirements("requirements.txt")
+#Task.add_requirements("requirements.txt")
 from pathlib import Path
 import logging
 import torch
@@ -15,10 +14,12 @@ from transformers import (
 )
 from PIL import Image
 import tempfile, zipfile
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../src')))
 from enigmaai import util
 from enigmaai.config import Project, ConfigFactory
+from enigmaai.desc_prep_util import find_dir_with_files
 from enigmaai.desc_util import CaptionDataset, ComputeMetrics, CustomDataCollator
-import subprocess, sys
+import subprocess
 # Install absl-py on the fly so evaluate.load("rouge") can import it
 subprocess.check_call([sys.executable, "-m", "pip", "install", "absl-py"])
 subprocess.check_call([sys.executable, "-m", "pip", "install", "rouge-score"])
@@ -30,36 +31,70 @@ working_dir = Path(tempfile.mkdtemp()) / project_name
 working_dir.mkdir(parents=True, exist_ok=True)    
 print("Working temp directory at:", working_dir)
 
+"""
+Initialize task for model evaluation
+"""
 # Initialize clearl task
 task = Task.init(project_name=project_name, 
-                task_name="step5_desc_model_evaluation", 
+                task_name="step7_desc_model_evaluation", 
                 task_type=Task.TaskTypes.qc)
 params = {
-    'desc_draft_model_id': '96f429eb382f44b1a08a78e168c7bf3b',       # the unpublished model to evaluate 
-    'desc_pub_model_name': '',       # the published model name (also variant) for comparison
+    'dataset_id': '', #'f6865cde77d843eb93829a268b2adeaf',                # specific version of the eval caption dataset
+    'dataset_name': 'Desc_Caption_EvalDataset ',              # latest registered dataset
+    'eval_dataset_id': '', #'e19da140dd6a479c864dd7bdf930918d',#'2231b5b121924ed684d6560cf6839619',     # specific version of the dataset
+    'eval_dataset_name': 'eval_dataset_zip',
+    'desc_draft_model_id': '', #'36939d5f9c7a41a2b75ee2110e155144',       # the unpublished model to evaluate 
+    'desc_pub_model_name': 'student_desc_model',       # the published model name for comparison
 }
 task.connect(params)
 task.execute_remotely(queue_name="desc_preparation")
 task_params = task.get_parameters()
-print("model_eval params=", task_params)
+logging.info("model_eval params=", task_params)
+
+dataset_id = params['dataset_id']
+dataset_name = params['dataset_name']
+img_dataset_id = params['eval_dataset_id']
+img_dataset_name = params['eval_dataset_name']
+draft_model_id = params['desc_draft_model_id']
+pub_model_name = params["desc_pub_model_name"]
+
+# validate task input params
+if not dataset_id and not dataset_name:
+    task.mark_completed(status_message="No dataset provided. Nothing to evaluate on. Ensure to execute task 4")
+    exit(0)
+if not img_dataset_id and not img_dataset_name:
+    task.mark_completed(status_message="No image dataset provided. Nothing to evaluate.")
+    exit(0)
 
 """
-Dataset for evaluation - test.json
+Reference description/caption Dataset for evaluation - desc_caption_testdataset.json
 """
-# 2. Fetch split JSON dataset from "Desc_final_dataset" under "Description" project
-split_ds = Dataset.get(dataset_id="41511324658b4cc0a49d3e1c771415f4", only_completed=True, alias="split_data")
-splits_path = Path(split_ds.get_local_copy())
-TEST_CAPTIONS_JSON = splits_path / "test.json"
-logging.info(f"Split JSONs located at: {splits_path}")
+# 2. Fetch JSON dataset from "Desc_Caption_EvalDataset" under "Description" project
+try: 
+    # download the latest registered caption eval dataset
+    server_dataset = Dataset.get(dataset_id=dataset_id, only_completed=True, alias="eval_cap_dataset")
+except ValueError:
+    # download the latest registered dataset
+    server_dataset = Dataset.get(dataset_name=dataset_name, dataset_project=project_name, only_completed=True, alias="eval_cap_dataset")
+eval_cap_path = server_dataset.get_local_copy()          
+print(f"Downloaded dataset name: {server_dataset.name} id: ({server_dataset.id}) to: {eval_cap_path}")
+eval_cap_path = Path(eval_cap_path)
+test_json = eval_cap_path / "desc_caption_testdataset.json"
+logging.info(f"Split JSONs located at: {eval_cap_path}")
 
-# 3. Fetch images ZIP from "base_dataset_zip" under "Detection" project
-#img_ds = Dataset.get(dataset_project="Detection", dataset_name="base_dataset_zip", only_completed=True, alias="image_data")
-images_data = Dataset.get(
-    dataset_id= '1201a0351b6442f1ba12245d5db779a1', #"2231b5b121924ed684d6560cf6839619",
-    only_completed=True,
-    alias="base_images"  
-)
-raw_path = Path(images_data.get_local_copy())
+"""
+Fetching image dataset for evaluation
+"""
+# Fetch images ZIP from "eval_dataset_zip" under "Detection" project
+try: 
+    # download the latest registered dataset
+    server_dataset = Dataset.get(dataset_id=img_dataset_id, only_completed=True, alias="eval_img_dataset")
+except ValueError:
+    server_dataset = Dataset.get(dataset_name=img_dataset_name, dataset_project="Detection", only_completed=True, alias="eval_img_dataset")
+extract_path = server_dataset.get_local_copy()          
+print(f"Downloaded eval image dataset name: {server_dataset.name} id: ({server_dataset.id}) to: {extract_path}")
+
+raw_path = Path(extract_path)
 if raw_path.is_dir():
     inner_zips = list(raw_path.glob("*.zip"))
     if inner_zips:
@@ -76,41 +111,27 @@ if raw_path.is_file() and raw_path.suffix.lower() == ".zip":
     extract_path = extract_root
 else:
     extract_path = raw_path
+images_dir = find_dir_with_files(extract_path, "images")
+logging.info(f"Images downloaded to: {images_dir}")
 
-# DETECT images
-def find_dir_with_most_files(root: Path, name: str) -> Path:
-    """Search recursively for folders named `name` and return the one containing the most files."""
-    best_dir = None
-    best_count = 0
-    for candidate in root.rglob(name):
-        if candidate.is_dir():
-            cnt = sum(1 for _ in candidate.iterdir() if _.is_file())
-            if cnt > best_count:
-                best_dir, best_count = candidate, cnt
-    if not best_dir:
-        raise FileNotFoundError(f"No directory named '{name}' found under {root}")
-    return best_dir
-IMAGE_ROOT = find_dir_with_most_files(extract_path, "images")
-logging.info(f"Images located at: {IMAGE_ROOT}")
-
-
-draft_model_id = task_params['General/desc_draft_model_id']
-pub_model_name = task_params["General/desc_pub_model_name"]
-MAX_TARGET_LEN     = 64
-EVAL_BATCH_SIZE    = 16
-DEVICE             = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+"""
+Model evaluation
+"""
+max_target_len = 64
+eval_batch_size = 16
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 out_dir = working_dir / "outputs_eval" 
 
-# no eval dataset provided
-if not TEST_CAPTIONS_JSON:
+# no eval caption and image dataset provided
+if not test_json or not images_dir:
     task.mark_completed(status_message="No dataset provided for evaluation.")
     exit(0)
 # no model provided for evaluation
 if not draft_model_id:
     raise ValueError("Missing new/draft model. Please provide draft_model_id.")
 # Mandatory input param
-#if not pub_model_name:
-    #raise ValueError("Missing model. Please provide pub_model_name.")
+if not pub_model_name:
+    raise ValueError("Missing model. Please provide pub_model_name.")
 
 # fetch the draft model path for evaluation    
 draft_model = Model(model_id=draft_model_id)    
@@ -146,11 +167,11 @@ def load_model(model_path):
     model.config.pad_token_id            = tokenizer.pad_token_id
     model.config.decoder_start_token_id  = tokenizer.bos_token_id
     model.config.eos_token_id            = tokenizer.eos_token_id
-    model.config.max_length              = MAX_TARGET_LEN
+    model.config.max_length              = max_target_len
     model.config.num_beams               = 4
     model.config.length_penalty          = 2.0
     model.config.early_stopping          = True
-    model.to(DEVICE)
+    model.to(device)
     return model, feature_extractor, tokenizer
 
 def generate_caption(image_path, model, fe, tk, max_new_tokens=40, num_beams=4, decode=True):
@@ -167,11 +188,11 @@ def generate_caption(image_path, model, fe, tk, max_new_tokens=40, num_beams=4, 
         )
     return tk.decode(output_ids[0], skip_special_tokens=True) if decode else output_ids[0]
 
-# ─── Evaluation Setup ─────────────
+# Evaluation Setup 
 eval_args = Seq2SeqTrainingArguments(
     output_dir=out_dir,
     run_name="test_student_model",# temp directory
-    per_device_eval_batch_size=EVAL_BATCH_SIZE,
+    per_device_eval_batch_size=eval_batch_size,
     predict_with_generate=True,
     do_train=False,
     do_eval=True,
@@ -181,8 +202,8 @@ eval_args = Seq2SeqTrainingArguments(
 
 # function to run evaluation 
 def run_eval(split_name, captions_json, model, feature_extractor, tokenizer):
-    ds = CaptionDataset(captions_json, IMAGE_ROOT, feature_extractor, tokenizer, MAX_TARGET_LEN)
-    collator_fn = CustomDataCollator(model, tokenizer, DEVICE)
+    ds = CaptionDataset(captions_json, images_dir, feature_extractor, tokenizer, max_target_len)
+    collator_fn = CustomDataCollator(model, tokenizer, device)
     compute_metrics_fn = ComputeMetrics(tokenizer)
     trainer = Seq2SeqTrainer(
         model=model,
@@ -201,10 +222,10 @@ Evaluation and comparison between draft and published best model
 """
 # evaluate the draft model    
 draft_model_hf, draft_feature_extractor, draft_tokenizer = load_model(draft_model_path)
-draft_metrics = run_eval("Test", TEST_CAPTIONS_JSON, draft_model_hf, draft_feature_extractor, draft_tokenizer)
+draft_metrics = run_eval("Test", test_json, draft_model_hf, draft_feature_extractor, draft_tokenizer)
 # evaluate the published best model
 pub_model_hf, pub_feature_extractor, pub_tokenizer = load_model(pub_model_path)
-pub_metrics = run_eval("Test", TEST_CAPTIONS_JSON, pub_model_hf, pub_feature_extractor, pub_tokenizer)    
+pub_metrics = run_eval("Test", test_json, pub_model_hf, pub_feature_extractor, pub_tokenizer)    
 # show metrics for comparision
 print("keys=", draft_metrics.keys)
 print("draft_metrics=", draft_metrics)

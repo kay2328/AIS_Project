@@ -6,11 +6,14 @@ import json
 import numpy as np
 import os
 from PIL import Image
+from transformers import Seq2SeqTrainer
 import evaluate
 from pycocoevalcap.cider.cider import Cider
 #from pycocoevalcap.spice.spice import Spice
 
-
+"""
+Dataset class
+"""
 class CaptionDataset(Dataset):
     def __init__(self, captions_json, image_root, feature_extractor, tokenizer, max_len):
         """
@@ -41,6 +44,15 @@ class CaptionDataset(Dataset):
         return {"pixel_values": pixel_values, "labels": labels}
 
 """
+Custom Seq2Seq Trainer
+"""
+class CleanSeq2SeqTrainer(Seq2SeqTrainer):
+    def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
+        # pop Trainer-only args so they don't get forwarded into your model
+        inputs.pop("num_items_in_batch", None)
+        # now call the parent (it expects just model, inputs, return_outputs)
+        return super().compute_loss(model, inputs, return_outputs)
+"""
 Custom Data Collator
 """
 class CustomDataCollator:
@@ -67,7 +79,6 @@ class CustomDataCollator:
 """
 Metrics for evaluation
 """
-
 class ComputeMetrics:
     def __init__(self, tokenizer):
         self.tokenizer   = tokenizer

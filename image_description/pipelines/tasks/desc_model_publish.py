@@ -13,11 +13,11 @@ If it is already in Published state, the model will not be published again. Refe
 project = ConfigFactory.get_config(Project.SCENE_DESCRIPTION)
 project_name = project.get('project-name')
 task = Task.init(project_name=project_name, 
-                task_name="step6_desc_model_publish", 
+                task_name="step8_desc_model_publish", 
                 task_type=Task.TaskTypes.qc)
 
 params = {
-    'desc_draft_model_id': '96f429eb382f44b1a08a78e168c7bf3b',      # specific id of the model
+    'desc_draft_model_id': '' #'96f429eb382f44b1a08a78e168c7bf3b',      # specific id of the model
 }
 
 task.connect(params)
@@ -25,7 +25,7 @@ task.execute_remotely(queue_name="desc_preparation")
 task_params = task.get_parameters()
 print("model_publish params=", task_params)
 
-draft_model_id = task_params['General/desc_draft_model_id']
+draft_model_id = params['desc_draft_model_id']
     
 # no model provided for publishing
 if not draft_model_id:
