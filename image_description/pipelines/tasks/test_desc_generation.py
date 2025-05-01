@@ -75,10 +75,10 @@ if not img_dataset_id and not img_dataset_name:
 Fetch images data to generate descriptions for evaluation
 """
 # get the image dataset from "Detection project - base_dataset_zip"
-if img_dataset_id: 
+try: 
     # download the latest registered dataset
     server_dataset = Dataset.get(dataset_id=img_dataset_id, only_completed=True, alias="base_dataset")
-elif img_dataset_name: 
+except ValueError:
     # download the latest registered dataset
     server_dataset = Dataset.get(dataset_name=img_dataset_name, dataset_project="Detection", only_completed=True, alias="base_dataset")
 extract_path = server_dataset.get_local_copy()          
@@ -117,7 +117,7 @@ elif dataset_name:
 extract_path = server_dataset.get_local_copy()          
 print(f"Downloaded dataset name: {server_dataset.name} id: ({server_dataset.id}) to: {extract_path}")
 extract_path = Path(extract_path)
-annot_file = extract_path / "desc_prep_base_dataset.json"
+annot_file = extract_path / "desc_prep_test_dataset.json"
 
 if not annot_file.exists():
     # print out what _is_ in that folder to see where JSON landed
