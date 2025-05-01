@@ -77,10 +77,10 @@ Fetch images data to generate descriptions for evaluation
 # get the image dataset from "Detection project - base_dataset_zip"
 if img_dataset_id: 
     # download the latest registered dataset
-    server_dataset = Dataset.get(dataset_id=dataset_id, only_completed=True, alias="base_dataset")
+    server_dataset = Dataset.get(dataset_id=img_dataset_id, only_completed=True, alias="base_dataset")
 elif img_dataset_name: 
     # download the latest registered dataset
-    server_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="Detection", only_completed=True, alias="base_dataset")
+    server_dataset = Dataset.get(dataset_name=img_dataset_name, dataset_project="Detection", only_completed=True, alias="base_dataset")
 extract_path = server_dataset.get_local_copy()          
 print(f"Downloaded base dataset name: {server_dataset.name} id: ({server_dataset.id}) to: {extract_path}")
 
