@@ -1,5 +1,5 @@
 from clearml import Task, Dataset, OutputModel
-#Task.add_requirements("requirements.txt")
+Task.add_requirements("requirements.txt")
 import os
 import logging
 import zipfile

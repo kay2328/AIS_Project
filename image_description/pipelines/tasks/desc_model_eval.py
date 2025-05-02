@@ -1,7 +1,7 @@
 import sys
 import os
 from clearml import Task, Dataset, Model
-#Task.add_requirements("requirements.txt")
+Task.add_requirements("requirements.txt")
 from pathlib import Path
 import logging
 import torch
