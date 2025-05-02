@@ -65,7 +65,7 @@ pipe.add_step(
     base_task_project=project_name,
     base_task_name="step1_desc_basedata_preparation",
     parameter_override={
-        "General/dataset_id": "${pipeline.base_dataset_id}"
+        "General/dataset_id": pipe.get_parameters()["dataset_id"]
         },
     pre_execute_callback=pre_base_dataprep_callback,
     post_execute_callback=post_base_dataprep_callback
@@ -90,8 +90,8 @@ pipe.add_step(
     base_task_project=project_name,
     base_task_name="step2_desc_testdata_preparation",
     parameter_override={
-        "General/eval_dataset_id": "${pipeline.eval_dataset_id}",
-        "General/eval_dataset_name": "${pipeline.eval_dataset_name}"
+        "General/eval_dataset_id": pipe.get_parameters()["eval_dataset_id"],
+        "General/eval_dataset_name": pipe.get_parameters()["eval_dataset_name"]
         },
     pre_execute_callback=pre_base_dataprep_callback,
     post_execute_callback=post_base_dataprep_callback
@@ -123,10 +123,10 @@ pipe.add_step(
     base_task_project=project_name,
     base_task_name="step3_desc_basecaption_generation",
     parameter_override={
-        "General/dataset_id": "${pipeline.dataset_id}",
-        "General/dataset_name": "${pipeline.dataset_name}",
-        "General/base_dataset_id": "${pipeline.base_dataset_id}", 
-        "General/base_dataset_name": "${pipeline.base_dataset_name}"
+        "General/dataset_id": pipe.get_parameters()["dataset_id"],
+        "General/dataset_name": pipe.get_parameters()["dataset_name"],
+        "General/base_dataset_id": pipe.get_parameters()["base_dataset_id"], 
+        "General/base_dataset_name": pipe.get_parameters()["base_dataset_name"]
     },
     pre_execute_callback=pre_processing_callback,
     post_execute_callback=post_processing_callback
@@ -158,10 +158,10 @@ pipe.add_step(
     base_task_project=project_name,
     base_task_name="step4_desc_evalcaption_generation",
     parameter_override={
-        "General/dataset_id": "${pipeline.dataset_id}",
-        "General/dataset_name": "${pipeline.dataset_name}",
-        "General/eval_dataset_id": "${pipeline.eval_dataset_id}", 
-        "General/eval_dataset_name": "${pipeline.eval_dataset_name}"
+        "General/dataset_id": pipe.get_parameters()["dataset_id"],
+        "General/dataset_name": pipe.get_parameters()["dataset_name"],
+        "General/eval_dataset_id": pipe.get_parameters()["eval_dataset_id"], 
+        "General/eval_dataset_name": pipe.get_parameters()["eval_dataset_name"]
     },
     pre_execute_callback=pre_processing_callback,
     post_execute_callback=post_processing_callback
@@ -170,12 +170,7 @@ pipe.add_step(
 STEP 5: Splitting Train Dataset
 """
 # it will get dataset_id from step 3, if not provided, this will be used
-params = {
-    'cap_dataset_id': '',
-    'cap_dataset_name': 'Desc_Caption_BaseDataset',
-    'random_state': 42,
-    'val_size': 0.2,
-}
+
 pipe.add_parameter("cap_dataset_id", "", "(Optional) Overitten if previous task is not skipped. If empty, use the latest of base caption dataset id")
 pipe.add_parameter("cap_dataset_name", "Desc_Caption_BaseDataset", "latest of base caption dataset_name")
 pipe.add_parameter("random_state", 42, "Specify random state for consistent training")
@@ -196,8 +191,8 @@ pipe.add_step(
     base_task_project=project_name,
     base_task_name="step5_desc_split_data",
     parameter_override={
-        "General/cap_dataset_id": "${pipeline.cap_dataset_id}", 
-        "General/cap_dataset_name": "${pipeline.cap_dataset_name}",
+        "General/cap_dataset_id": pipe.get_parameters()["cap_dataset_id"], 
+        "General/cap_dataset_name": pipe.get_parameters()["cap_dataset_name"],
         "General/output_dataset_name": pipe.get_parameters()["split_dataset_name"],
         "General/random_state": pipe.get_parameters()["random_state"],
         "General/val_size": pipe.get_parameters()["val_size"]
@@ -244,10 +239,10 @@ pipe.add_step(
     base_task_project=project_name,
     base_task_name="step6_desc_model_training",
     parameter_override={
-        "General/split_dataset_id": "${pipeline.split_dataset_id}",   
-        "General/split_dataset_name": "${pipeline.split_dataset_name}", 
-        "General/base_dataset_id": "${pipeline.base_dataset_id}", 
-        "General/base_dataset_name": "${pipeline.base_dataset_name}"},
+        "General/split_dataset_id": pipe.get_parameters()["split_dataset_id"],   
+        "General/split_dataset_name": pipe.get_parameters()["split_dataset_name"], 
+        "General/base_dataset_id": pipe.get_parameters()["base_dataset_id"], 
+        "General/base_dataset_name": pipe.get_parameters()["base_dataset_name"]},
     pre_execute_callback=pre_training_callback,
     post_execute_callback=post_training_callback
 )
@@ -294,12 +289,12 @@ pipe.add_step(
     base_task_project=project_name,
     base_task_name="step7_desc_model_evaluation",
     parameter_override={
-        "General/dataset_id": "${pipeline.dataset_id}", 
-        "General/dataset_name": "${pipeline.dataset_name}",
-        "General/eval_dataset_id": "${pipeline.eval_dataset_id}", 
-        "General/eval_dataset_name": "${pipeline.eval_dataset_name}",
+        "General/dataset_id": pipe.get_parameters()["dataset_id"], 
+        "General/dataset_name": pipe.get_parameters()["dataset_name"],
+        "General/eval_dataset_id": pipe.get_parameters()["eval_dataset_id"], 
+        "General/eval_dataset_name": pipe.get_parameters()["eval_dataset_name"],
         "General/draft_model_id": "${desc_model_training.parameters.General/output_model_id}",
-        "General/pub_model_name": "${pipeline.desc_pub_model_name}"
+        "General/pub_model_name": pipe.get_parameters()["pub_model_name"]
     },
     pre_execute_callback=pre_eval_callback,
     post_execute_callback=post_eval_callback
