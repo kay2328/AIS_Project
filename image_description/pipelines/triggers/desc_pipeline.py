@@ -43,7 +43,7 @@ pipeline_name = "VLMPipeline"
 pipe = PipelineController(name=pipeline_name, 
                           project=project_name, 
                           add_pipeline_tags=False)
-pipe.set_default_execution_queue("desc_pipeline")
+pipe.set_default_execution_queue("desc_preparation")
 
 """ 
 STEP 1: Create Image-Label Mapping dataset from Base dataset under Detection Project
@@ -99,7 +99,7 @@ pipe.add_step(
 remote_execution = project.get("pipeline-remote-execution")
 if remote_execution:
     print(f"Executing '{pipeline_name}' pipeline remotely")
-    pipe.start(queue = "desc_pipeline")
+    pipe.start(queue = "desc_preparation")
 else:
     print(f"Executing '{pipeline_name}' pipeline locally")
     pipe.start_locally(run_pipeline_steps_locally=True)
