@@ -329,7 +329,7 @@ pipe.add_step(
 remote_execution = project.get("pipeline-remote-execution")
 if remote_execution:
     print(f"Executing '{pipeline_name}' pipeline remotely")
-    pipe.start()
+    pipe.start(queue="desc_preparation")
 else:
     print(f"Executing '{pipeline_name}' pipeline locally")
     pipe.start_locally(run_pipeline_steps_locally=True)
