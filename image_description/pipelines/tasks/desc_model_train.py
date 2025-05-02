@@ -53,10 +53,10 @@ params = {
 task.connect(params)
 task.execute_remotely(queue_name="desc_preparation")
 
-dataset_id = params['split_dataset_id']
-dataset_name = params['split_dataset_name']
-img_dataset_id = params['base_dataset_id']
-img_dataset_name = params['base_dataset_name']
+dataset_id = task.get_parameters()['General/split_dataset_id']
+dataset_name = task.get_parameters()['General/split_dataset_name']
+img_dataset_id = task.get_parameters()['General/base_dataset_id']
+img_dataset_name = task.get_parameters()['General/base_dataset_name']
 # validate task input params
 if not dataset_id and not dataset_name:
     task.mark_completed(status_message="No dataset provided. Nothing to train on. Ensure to execute task 5")

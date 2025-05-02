@@ -25,7 +25,7 @@ task.execute_remotely(queue_name="desc_preparation")
 task_params = task.get_parameters()
 print("model_publish params=", task_params)
 
-draft_model_id = params['desc_draft_model_id']
+draft_model_id = task.get_parameters()['General/desc_draft_model_id']
     
 # no model provided for publishing
 if not draft_model_id:

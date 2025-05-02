@@ -31,8 +31,8 @@ task.execute_remotely(queue_name="desc_preparation")
 Fetching captions dataset from task 3
 """
 # download dataset 
-dataset_id = params['cap_dataset_id']
-dataset_name = params['cap_dataset_name']
+dataset_id = task.get_parameters()['General/cap_dataset_id']
+dataset_name = task.get_parameters()['General/cap_dataset_name']
 
 # validate task input params
 if not dataset_id and not dataset_name:
@@ -58,8 +58,8 @@ Split dataset after including reference descriptions, downloaded from ClearML se
 # Prepare list of stems
 all_stems = [Path(fn).stem for fn in mapping.keys()]
 # split sizes
-val_size = params['val_size']
-random_state = params['random_state']
+val_size = task.get_parameter()['General/val_size']
+random_state = task.get_parameter()['General/random_state']
 # split train, val, test sets according task params
 train_stems, val_stems = train_test_split(all_stems, test_size = val_size, random_state=random_state)
 # Build split mappings

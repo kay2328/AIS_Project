@@ -51,12 +51,12 @@ task.execute_remotely(queue_name="desc_preparation")
 task_params = task.get_parameters()
 logging.info("model_eval params=", task_params)
 
-dataset_id = params['dataset_id']
-dataset_name = params['dataset_name']
-img_dataset_id = params['eval_dataset_id']
-img_dataset_name = params['eval_dataset_name']
-draft_model_id = params['desc_draft_model_id']
-pub_model_name = params["desc_pub_model_name"]
+dataset_id = task.get_parameters()['General/dataset_id']
+dataset_name = task.get_parameters()['General/dataset_name']
+img_dataset_id = task.get_parameters()['General/eval_dataset_id']
+img_dataset_name = task.get_parameters()['General/eval_dataset_name']
+draft_model_id = task.get_parameters()['General/desc_draft_model_id']
+pub_model_name = task.get_parameters()['General/desc_pub_model_name']
 
 # validate task input params
 if not dataset_id and not dataset_name:
