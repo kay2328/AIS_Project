@@ -49,7 +49,7 @@ pipe.set_default_execution_queue("desc_preparation")
 STEP 1: Create Image-Label Mapping dataset from Base dataset under Detection Project
 """
 # intial dataset to download. If none provided, task will complete without upload
-base_dataset_id = ""
+base_dataset_id = "26083b24ab0c47219a5e4f3fe026b085"
 base_dataset_name = "base_dataset_zip"
 
 pipe.add_parameter("base_dataset_id", base_dataset_id, "latest of base_dataset_zip id")
@@ -73,7 +73,7 @@ pipe.add_step(
 """ 
 STEP 2: Create Image-Label Mapping dataset from Eval dataset under Detection Project
 """
-eval_dataset_id = ""
+eval_dataset_id = "e19da140dd6a479c864dd7bdf930918d"
 eval_dataset_name = "eval_dataset_zip"
 
 pipe.add_parameter("eval_dataset_id", eval_dataset_id, "latest of eval_dataset_zip id")
@@ -102,7 +102,7 @@ STEP 3: Train Data Reference description generation
 """
 dataset_id = ""
 dataset_name = "Desc_Base_Dataset"
-base_dataset_id = ''
+base_dataset_id = '26083b24ab0c47219a5e4f3fe026b085'
 base_dataset_name = "base_dataset_zip"
 
 pipe.add_parameter("dataset_id", dataset_id, "latest id of base data img-label mapping")
@@ -137,7 +137,7 @@ STEP 4: Test Data Reference description generation
 """
 dataset_id = ""
 dataset_name = "Desc_Eval_Dataset"
-eval_dataset_id = ''
+eval_dataset_id = 'e19da140dd6a479c864dd7bdf930918d'
 eval_dataset_name = "eval_dataset_zip"
 
 pipe.add_parameter("dataset_id", dataset_id, "latest id of eval data img-label mapping from step 2")
@@ -221,7 +221,7 @@ def load_hyp_config(model_variant) -> dict:
 """
 split_dataset_id= '',               
 split_dataset_name ='Desc_Split_dataset'            
-base_dataset_id = ''
+base_dataset_id = '26083b24ab0c47219a5e4f3fe026b085'
 base_dataset_name = 'base_dataset_zip'
 
 # model training settings
@@ -268,7 +268,7 @@ def load_eval_config(model_variant) -> dict:
 """
 dataset_id= '',              
 dataset_name= 'Desc_Caption_EvalDataset ',              # latest registered dataset
-eval_dataset_id= '',
+eval_dataset_id= 'e19da140dd6a479c864dd7bdf930918d',
 eval_dataset_name= 'eval_dataset_zip',
 desc_draft_model_id= '',       # the unpublished model to evaluate 
 desc_pub_model_name= 'student_desc_model'
