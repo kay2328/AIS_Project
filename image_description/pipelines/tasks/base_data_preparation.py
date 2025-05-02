@@ -37,8 +37,8 @@ logger = task.get_logger()
 task.connect(params)
 task.execute_remotely(queue_name="desc_preparation")
 
-dataset_id = params['base_dataset_id']
-dataset_name = params['base_dataset_name']
+dataset_id = task.get_params()['base_dataset_id']
+dataset_name = task.get_params()['base_dataset_name']
 
 # validate task input params
 if not dataset_id and not dataset_name:
