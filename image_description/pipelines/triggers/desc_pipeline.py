@@ -43,7 +43,7 @@ pipeline_name = "VLMPipeline"
 pipe = PipelineController(name=pipeline_name, 
                           project=project_name, 
                           add_pipeline_tags=False)
-pipe.set_default_execution_queue("desc_pipeline")
+pipe.set_default_execution_queue("desc_preparation")
 
 """ 
 STEP 1: Create Image-Label Mapping dataset from Base dataset under Detection Project
