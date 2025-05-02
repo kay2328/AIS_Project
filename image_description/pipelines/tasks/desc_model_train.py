@@ -1,5 +1,5 @@
 from clearml import Task, Dataset, OutputModel
-Task.add_requirements("requirements.txt")
+#Task.add_requirements("requirements.txt")
 import os
 import logging
 import zipfile
@@ -10,6 +10,8 @@ from transformers import (
     ViTFeatureExtractor,
     AutoTokenizer,
     Seq2SeqTrainingArguments)
+# Force a non-interactive backend
+os.environ['MPLBACKEND'] = 'agg'
 import matplotlib.pyplot as plt
 import torch
 import sys
