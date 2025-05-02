@@ -2,4 +2,4 @@ project-name: Description
 storage-cache-limit: 5
 # Runs pipeline remotely. If false, all pipeline tasks runs on local machine
 # This should be set to true on production and staging
-pipeline-remote-execution: True
+pipeline-remote-execution: False
