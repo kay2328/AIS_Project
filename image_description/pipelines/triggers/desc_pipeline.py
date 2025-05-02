@@ -90,7 +90,8 @@ pipe.add_step(
     base_task_project=project_name,
     base_task_name="step2_desc_testdata_preparation",
     parameter_override={
-        "General/dataset_id": "${pipeline.eval_dataset_id}"
+        "General/eval_dataset_id": "${pipeline.eval_dataset_id}",
+        "General/eval_dataset_name": "${pipeline.eval_dataset_name}"
         },
     pre_execute_callback=pre_base_dataprep_callback,
     post_execute_callback=post_base_dataprep_callback
