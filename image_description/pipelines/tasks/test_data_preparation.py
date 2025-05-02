@@ -77,7 +77,7 @@ Prepare dataset for test set.
 """
 # get image file prefix that has corresponding labels
 images_dir = find_dir_with_files(extract_path, "images")
-labels_dir = find_dir_with_files(extract_path, "images")
+labels_dir = find_dir_with_files(extract_path, "labels")
 logging.info(f"Images located at: {images_dir}")
 logging.info(f"Labels located at: {labels_dir}")
 
