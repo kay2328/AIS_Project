@@ -298,6 +298,8 @@ pipe.add_step(
 """
 STEP 8: Model Publishing
 """
+pipe.add_parameter("desc_draft_model_id", "", "latest trained model in draft state")
+
 def pre_pub_callback(pipeline, node, param_override) -> bool:
     print("Cloning step8_desc_model_publish id={}".format(node.base_task_id))    
     return True
