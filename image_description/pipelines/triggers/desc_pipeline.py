@@ -289,7 +289,7 @@ def post_eval_callback(pipeline, node) -> None:
 
 pipe.add_step(
     name="desc_model_evaluation",
-    parents=["desc_model_training", "eval_desc_generation"],
+    parents=["eval_desc_generation", "desc_model_training"],
     base_task_project=project_name,
     base_task_name="step7_desc_model_evaluation",
     parameter_override={
