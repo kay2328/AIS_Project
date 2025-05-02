@@ -127,8 +127,8 @@ if not test_json or not images_dir:
     task.mark_completed(status_message="No dataset provided for evaluation.")
     exit(0)
 # no model provided for evaluation
-if not draft_model_id:
-    raise ValueError("Missing new/draft model. Please provide draft_model_id.")
+#if not draft_model_id:
+    #raise ValueError("Missing new/draft model. Please provide draft_model_id.")
 # Mandatory input param
 if not pub_model_name:
     raise ValueError("Missing model. Please provide pub_model_name.")
