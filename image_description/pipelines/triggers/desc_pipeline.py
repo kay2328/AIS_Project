@@ -288,7 +288,7 @@ pipe.add_step(
         #"General/dataset_name": pipe.get_parameters()["dataset_name"],
         #"General/eval_dataset_id": pipe.get_parameters()["eval_dataset_id"], 
         #"General/eval_dataset_name": pipe.get_parameters()["eval_dataset_name"],
-        "General/desc_draft_model_id": "${desc_model_training.parameters.General/output_model_id}",
+        "desc_draft_model_id": "${desc_model_training.parameters.General/output_model_id}",
         #"General/desc_pub_model_name": pipe.get_parameters()["desc_pub_model_name"]
     },
     pre_execute_callback=pre_eval_callback,
