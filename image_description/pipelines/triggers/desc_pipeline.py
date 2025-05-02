@@ -65,7 +65,7 @@ pipe.add_step(
     base_task_project=project_name,
     base_task_name="step1_desc_basedata_preparation",
     parameter_override={
-        "General/dataset_id": pipe.get_parameters()["dataset_id"]
+        "General/dataset_id": pipe.get_parameters()["base_dataset_id"]
         },
     pre_execute_callback=pre_base_dataprep_callback,
     post_execute_callback=post_base_dataprep_callback
