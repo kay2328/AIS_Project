@@ -58,8 +58,8 @@ Split dataset after including reference descriptions, downloaded from ClearML se
 # Prepare list of stems
 all_stems = [Path(fn).stem for fn in mapping.keys()]
 # split sizes
-val_size = task.get_parameter()['General/val_size']
-random_state = task.get_parameter()['General/random_state']
+val_size = task.get_parameters()['General/val_size']
+random_state = task.get_parameters()['General/random_state']
 # split train, val, test sets according task params
 train_stems, val_stems = train_test_split(all_stems, test_size = val_size, random_state=random_state)
 # Build split mappings
