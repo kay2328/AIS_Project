@@ -36,7 +36,6 @@ params = {
 logger = task.get_logger()
 task.connect(params)
 #task.execute_remotely(queue_name="desc_preparation")
-task.start_locally(run_pipeline_steps_locally=True)
 test_dataset_id = task.get_parameters()['General/eval_dataset_id']
 test_dataset_name = task.get_parameters()['General/eval_dataset_name']
 

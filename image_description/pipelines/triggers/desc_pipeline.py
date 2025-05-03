@@ -42,7 +42,7 @@ pipeline_name = "VLMPipeline"
 # Connecting ClearML with the current pipeline, from here on everything is logged automatically
 pipe = PipelineController(name=pipeline_name, 
                           project=project_name, 
-                          add_pipeline_tags=False)
+                          add_pipeline_tags=False, repo_root="/content/AIS_Project/image_description/")
 pipe.set_default_execution_queue("desc_preparation")
 
 """ 
