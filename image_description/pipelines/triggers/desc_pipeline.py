@@ -44,7 +44,7 @@ pipe = PipelineController(name=pipeline_name,
                           project=project_name, 
                           add_pipeline_tags=False)
 pipe.set_default_execution_queue("desc_preparation")
-pipe._task.set_script(working_dir="/content/AIS_Project/image_description/")
+pipe._task.set_script(working_dir="/content/AIS_Project/image_description")
 """ 
 STEP 1: Create Image-Label Mapping dataset from Base dataset under Detection Project
 """
@@ -103,8 +103,8 @@ if remote_execution:
     print(f"Executing '{pipeline_name}' pipeline remotely")
     pipe.start(queue = "desc_preparation")
 else:
-    for node in pipe._nodes:
-        node.job.task.set_script(working_dir="/content/AIS_Project/image_description/")
+    for node in pipe._nodes.values():
+        node.job.task.set_script(working_dir="/content/AIS_Project/image_description")
     print(f"Executing '{pipeline_name}' pipeline locally")
     pipe.start_locally(run_pipeline_steps_locally=True)
 print("done")
