@@ -34,7 +34,7 @@ Upload Base Dataset - upload base dataset. This will trigger default pipeline to
 Upload Evaluation Dataset - upload base dataset. This will trigger default pipeline to run in CD phase (NOT IMPLEMENTED)
 """
 import os
-os.chdir("/content/AIS_Project/image_description")
+os.chdir("/content/AIS_Project/")
 
 # get project configurations
 project = ConfigFactory.get_config(Project.SCENE_DESCRIPTION)
