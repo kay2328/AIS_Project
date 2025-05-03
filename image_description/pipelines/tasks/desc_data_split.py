@@ -25,7 +25,7 @@ params = {
 }
 logger = task.get_logger()
 task.connect(params)
-task.execute_remotely(queue_name="desc_preparation")
+#task.execute_remotely(queue_name="desc_preparation")
 
 """
 Fetching captions dataset from task 3

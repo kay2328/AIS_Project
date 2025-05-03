@@ -21,7 +21,7 @@ params = {
 }
 
 task.connect(params)
-task.execute_remotely(queue_name="desc_preparation")
+#task.execute_remotely(queue_name="desc_preparation")
 task_params = task.get_parameters()
 print("model_publish params=", task_params)
 
