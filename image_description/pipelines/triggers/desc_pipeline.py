@@ -76,7 +76,7 @@ pipe.add_step(
 """ 
 STEP 2: Create Image-Label Mapping dataset from Eval dataset under Detection Project
 """
-eval_dataset_id = "e19da140dd6a479c864dd7bdf930918d"
+eval_dataset_id = ""
 eval_dataset_name = "eval_dataset_zip"
 
 pipe.add_parameter("eval_dataset_id", eval_dataset_id, "latest of eval_dataset_zip id")
@@ -141,7 +141,7 @@ STEP 4: Test Data Reference description generation
 """
 dataset_id = ""
 dataset_name = "Desc_Eval_Dataset"
-eval_dataset_id = 'e19da140dd6a479c864dd7bdf930918d'
+eval_dataset_id = ''
 eval_dataset_name = "eval_dataset_zip"
 
 pipe.add_parameter("dataset_id", dataset_id, "latest id of eval data img-label mapping from step 2")
@@ -270,7 +270,7 @@ def load_eval_config(model_variant) -> dict:
 """
 dataset_id= '',              
 dataset_name= 'Desc_Caption_EvalDataset ',              # latest registered dataset
-eval_dataset_id= 'e19da140dd6a479c864dd7bdf930918d',
+eval_dataset_id= '',
 eval_dataset_name= 'eval_dataset_zip',
 desc_draft_model_id= '',       # the unpublished model to evaluate 
 desc_pub_model_name= 'student_desc_model'
