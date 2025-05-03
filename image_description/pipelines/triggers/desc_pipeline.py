@@ -51,7 +51,7 @@ pipe.set_default_execution_queue("desc_preparation")
 STEP 1: Create Image-Label Mapping dataset from Base dataset under Detection Project
 """
 # intial dataset to download. If none provided, task will complete without upload
-base_dataset_id = ""
+base_dataset_id = "26083b24ab0c47219a5e4f3fe026b085"
 base_dataset_name = "base_dataset_zip"
 
 pipe.add_parameter("base_dataset_id", base_dataset_id, "latest of base_dataset_zip id")
@@ -76,7 +76,7 @@ pipe.add_step(
 """ 
 STEP 2: Create Image-Label Mapping dataset from Eval dataset under Detection Project
 """
-eval_dataset_id = ""
+eval_dataset_id = "e19da140dd6a479c864dd7bdf930918d"
 eval_dataset_name = "eval_dataset_zip"
 
 pipe.add_parameter("eval_dataset_id", eval_dataset_id, "latest of eval_dataset_zip id")
@@ -106,7 +106,7 @@ STEP 3: Train Data Reference description generation
 """
 dataset_id = ""
 dataset_name = "Desc_Base_Dataset"
-base_dataset_id = ''
+base_dataset_id = '26083b24ab0c47219a5e4f3fe026b085'
 base_dataset_name = "base_dataset_zip"
 
 pipe.add_parameter("dataset_id", dataset_id, "latest id of base data img-label mapping")
@@ -127,7 +127,7 @@ pipe.add_step(
     base_task_project=project_name,
     base_task_name="step3_desc_basecaption_generation",
     parameter_override={
-        "General/dataset_id": "${pipeline.dataset_id}",
+        "General/dataset_id": "${BaseData_Mapping.parameters.General/output_dataset_id}",
         "General/dataset_name": "${pipeline.dataset_name}",
         "General/base_dataset_id": "${pipeline.base_dataset_id}", 
         "General/base_dataset_name": "${pipeline.base_dataset_name}"
@@ -141,7 +141,7 @@ STEP 4: Test Data Reference description generation
 """
 dataset_id = ""
 dataset_name = "Desc_Eval_Dataset"
-eval_dataset_id = ''
+eval_dataset_id = 'e19da140dd6a479c864dd7bdf930918d'
 eval_dataset_name = "eval_dataset_zip"
 
 pipe.add_parameter("dataset_id", dataset_id, "latest id of eval data img-label mapping from step 2")
@@ -162,7 +162,7 @@ pipe.add_step(
     base_task_project=project_name,
     base_task_name="step4_desc_evalcaption_generation",
     parameter_override={
-        "General/dataset_id": "${pipeline.dataset_id}",
+        "General/dataset_id": "${EvalData_Mapping.parameters.General/output_dataset_id}",
         "General/dataset_name": "${pipeline.dataset_name}",
         "General/eval_dataset_id": "${pipeline.eval_dataset_id}", 
         "General/eval_dataset_name": "${pipeline.eval_dataset_name}"
@@ -174,14 +174,12 @@ pipe.add_step(
 STEP 5: Splitting Train Dataset
 """
 # it will get dataset_id from step 3, if not provided, this will be used
-params = {
-    'cap_dataset_id': '',
-    'cap_dataset_name': 'Desc_Caption_BaseDataset',
-    'random_state': 42,
-    'val_size': 0.2,
-}
-pipe.add_parameter("cap_dataset_id", "", "(Optional) Overitten if previous task is not skipped. If empty, use the latest of base caption dataset id")
-pipe.add_parameter("cap_dataset_name", "Desc_Caption_BaseDataset", "latest of base caption dataset_name")
+cap_dataset_id= ''
+cap_dataset_name= 'Desc_Caption_BaseDataset'
+random_state= 42
+val_size=0.2
+pipe.add_parameter("cap_dataset_id", cap_dataset_id, "(Optional) Overitten if previous task is not skipped. If empty, use the latest of base caption dataset id")
+pipe.add_parameter("cap_dataset_name", cap_dataset_name, "latest of base caption dataset_name")
 pipe.add_parameter("random_state", 42, "Specify random state for consistent training")
 pipe.add_parameter("val_size", 0.15, "Validation split. Percentage of entire dataset.")
 pipe.add_parameter("split_dataset_name", "Desc_Split_dataset", "Name of the dataset to upload the outout to the server. Also used for the next step.")
@@ -200,7 +198,7 @@ pipe.add_step(
     base_task_project=project_name,
     base_task_name="step5_desc_split_data",
     parameter_override={
-        "General/cap_dataset_id": "${pipeline.cap_dataset_id}", 
+        "General/cap_dataset_id": "${base_desc_generation.parameters.General/output_dataset_id}", 
         "General/cap_dataset_name": "${pipeline.cap_dataset_name}",
         "General/output_dataset_name": pipe.get_parameters()["split_dataset_name"],
         "General/random_state": pipe.get_parameters()["random_state"],
@@ -225,7 +223,7 @@ def load_hyp_config(model_variant) -> dict:
 """
 split_dataset_id= '',               
 split_dataset_name ='Desc_Split_dataset'            
-base_dataset_id = ''
+base_dataset_id = '26083b24ab0c47219a5e4f3fe026b085'
 base_dataset_name = 'base_dataset_zip'
 
 # model training settings
@@ -248,7 +246,7 @@ pipe.add_step(
     base_task_project=project_name,
     base_task_name="step6_desc_model_training",
     parameter_override={
-        "General/split_dataset_id": "${pipeline.split_dataset_id}",   
+        "General/split_dataset_id": "${train_val_splitting.parameters.General/output_dataset_id}",# "${pipeline.split_dataset_id}",   
         "General/split_dataset_name": "${pipeline.split_dataset_name}", 
         "General/base_dataset_id": "${pipeline.base_dataset_id}", 
         "General/base_dataset_name": "${pipeline.base_dataset_name}"},
@@ -272,7 +270,7 @@ def load_eval_config(model_variant) -> dict:
 """
 dataset_id= '',              
 dataset_name= 'Desc_Caption_EvalDataset ',              # latest registered dataset
-eval_dataset_id= '',
+eval_dataset_id= 'e19da140dd6a479c864dd7bdf930918d',
 eval_dataset_name= 'eval_dataset_zip',
 desc_draft_model_id= '',       # the unpublished model to evaluate 
 desc_pub_model_name= 'student_desc_model'
@@ -298,7 +296,7 @@ pipe.add_step(
     base_task_project=project_name,
     base_task_name="step7_desc_model_evaluation",
     parameter_override={
-        "General/dataset_id": "${pipeline.dataset_id}", 
+        "General/dataset_id": "${eval_desc_generation.parameters.General/output_dataset_id}", 
         "General/dataset_name": "${pipeline.dataset_name}",
         "General/eval_dataset_id": "${pipeline.eval_dataset_id}", 
         "General/eval_dataset_name": "${pipeline.eval_dataset_name}",
