@@ -249,6 +249,10 @@ output_model = OutputModel(
 )
 # Upload the ZIP as the model weights
 output_model.update_weights(weights_filename=zip_path)
+task.upload_artifact(name="student_desc_model", artifact_object=str(best_dir))
 task.set_parameter("General/output_model_id", output_model.id)
 print("Registered model id:", output_model.id)
+
+
+
 logging.info("Student training on ClearML complete.")

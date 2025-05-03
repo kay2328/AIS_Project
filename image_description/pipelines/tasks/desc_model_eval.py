@@ -139,7 +139,7 @@ if not pub_model_name:
 draft_model = Model(model_id=draft_model_id)    
 print(f"Found draft model name:{draft_model.name} id:{draft_model.id}")
 draft_model_path = draft_model.get_local_copy(raise_on_error=True)
-print(f"Downloaded published model name: {draft_model.name} id:{draft_model.id} to: {draft_model_path}")
+print(f"Downloaded draft model name: {draft_model.name} id:{draft_model.id} to: {draft_model_path}")
   
 # fetch the published best model path
 server_models = Model.query_models(model_name=pub_model_name, only_published=True)
@@ -148,7 +148,7 @@ if not server_models:
     print(f"No published model found, use draft as the best model name:{draft_model.name} id:{draft_model.id}")
     pub_model_path = best_model.get_local_copy(raise_on_error=True)
     print(f"Downloaded draft model name: {best_model.name} id:{best_model.id} to: {pub_model_path}")
-else:    
+else:
     # best published model found
     pub_model = server_models[0] # get the most recent one
     task.set_parameter("pub_model_id", pub_model.id)
