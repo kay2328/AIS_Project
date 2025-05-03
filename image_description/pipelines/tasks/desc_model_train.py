@@ -127,7 +127,7 @@ Student model training configuration and set up
 STUDENT_CONFIG = {"encoder": "google/vit-base-patch16-224-in21k", "decoder": "distilgpt2"}
 train_batch_size = 16
 eval_batch_size = 16
-num_epochs = 1 
+num_epochs = 10 
 lr = 1e-4
 weight_decay=0.01
 max_target_len = 64
