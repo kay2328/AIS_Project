@@ -302,7 +302,7 @@ pipe.add_step(
         "General/dataset_name": "${pipeline.dataset_name}",
         "General/eval_dataset_id": "${pipeline.eval_dataset_id}", 
         "General/eval_dataset_name": "${pipeline.eval_dataset_name}",
-        "General/draft_model_id": "${desc_model_training.hyperparameters.Args/output_model_id}",
+        "General/draft_model_id": "${desc_model_training.parameters.Args/output_model_id}",
         "General/pub_model_name": "${pipeline.desc_pub_model_name}"
     },
     pre_execute_callback=pre_eval_callback,
@@ -326,7 +326,7 @@ pipe.add_step(
     base_task_project=project_name,
     base_task_name="step8_desc_model_publish",
     parameter_override={
-        "General/desc_draft_model_id": "${desc_model_evaluation.hyperparameters.Args/best_model_id}"
+        "General/desc_draft_model_id": "${desc_model_evaluation.parameters.Args/best_model_id}"
     },
     pre_execute_callback=pre_pub_callback,
     post_execute_callback=post_pub_callback
