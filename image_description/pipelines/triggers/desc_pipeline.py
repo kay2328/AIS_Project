@@ -79,8 +79,8 @@ STEP 2: Create Image-Label Mapping dataset from Eval dataset under Detection Pro
 eval_dataset_id = ""
 eval_dataset_name = "eval_dataset_zip"
 
-pipe.add_parameter("eval_dataset_id", eval_dataset_id, "latest of eval_dataset_zip id")
-pipe.add_parameter("eval_dataset_name", eval_dataset_name, "latest of eval_dataset_zip name")
+pipe.add_parameter("eval_dataset_id", "", "latest of eval_dataset_zip id")
+pipe.add_parameter("eval_dataset_name", "eval_dataset_zip", "latest of eval_dataset_zip name")
 
 def pre_base_dataprep_callback(pipeline, node, param_override) -> bool:    
     print("Cloning step2_desc_testdata_preparation id={}".format(node.base_task_id))    
@@ -144,10 +144,10 @@ dataset_name = "Desc_Eval_Dataset"
 eval_dataset_id = ''
 eval_dataset_name = "eval_dataset_zip"
 
-pipe.add_parameter("dataset_id", dataset_id, "latest id of eval data img-label mapping from step 2")
-pipe.add_parameter("dataset_name", dataset_name, "latest of eval data img-label name from step 2")
-pipe.add_parameter("eval_dataset_id", eval_dataset_id, "latest of eval_dataset_zip id")
-pipe.add_parameter("eval_dataset_name", eval_dataset_name, "latest of eval_dataset_zip name")
+pipe.add_parameter("dataset_id", "", "latest id of eval data img-label mapping from step 2")
+pipe.add_parameter("dataset_name", "Desc_Eval_Dataset", "latest of eval data img-label name from step 2")
+pipe.add_parameter("eval_dataset_id", "", "latest of eval_dataset_zip id")
+pipe.add_parameter("eval_dataset_name", "eval_dataset_zip", "latest of eval_dataset_zip name")
 
 def pre_processing_callback(pipeline, node, param_override) -> bool:
     print("Cloning step4_desc_evalcaption_generation id={}".format(node.base_task_id))    
@@ -178,8 +178,8 @@ cap_dataset_id= ''
 cap_dataset_name= 'Desc_Caption_BaseDataset'
 random_state= 42
 val_size=0.2
-pipe.add_parameter("cap_dataset_id", cap_dataset_id, "(Optional) Overitten if previous task is not skipped. If empty, use the latest of base caption dataset id")
-pipe.add_parameter("cap_dataset_name", cap_dataset_name, "latest of base caption dataset_name")
+pipe.add_parameter("cap_dataset_id", "", "(Optional) Overitten if previous task is not skipped. If empty, use the latest of base caption dataset id")
+pipe.add_parameter("cap_dataset_name", "Desc_Caption_BaseDataset", "latest of base caption dataset_name")
 pipe.add_parameter("random_state", 42, "Specify random state for consistent training")
 pipe.add_parameter("val_size", 0.15, "Validation split. Percentage of entire dataset.")
 pipe.add_parameter("split_dataset_name", "Desc_Split_dataset", "Name of the dataset to upload the outout to the server. Also used for the next step.")
@@ -228,9 +228,9 @@ base_dataset_name = 'base_dataset_zip'
 
 # model training settings
 pipe.add_parameter("split_dataset_id", "", "(Optional) Overitten if previous task is not skipped. If set, ignore split_dataset_name")
-pipe.add_parameter("split_dataset_name", split_dataset_name, "split data name")
-pipe.add_parameter("base_dataset_id", base_dataset_id, "latest of base_dataset_zip id")
-pipe.add_parameter("base_dataset_name", base_dataset_name, "latest of base_dataset_zip name")
+pipe.add_parameter("split_dataset_name", "Desc_Split_dataset", "split data name")
+pipe.add_parameter("base_dataset_id", "26083b24ab0c47219a5e4f3fe026b085", "latest of base_dataset_zip id")
+pipe.add_parameter("base_dataset_name", "base_dataset_zip", "latest of base_dataset_zip name")
 
 def pre_training_callback(pipeline, node, param_override) -> bool:  
     print("Cloning step6_desc_model_training id={}".format(node.base_task_id))    
@@ -275,12 +275,12 @@ eval_dataset_name= 'eval_dataset_zip',
 desc_draft_model_id= '',       # the unpublished model to evaluate 
 desc_pub_model_name= 'student_desc_model'
 
-pipe.add_parameter("eval_dataset_id", eval_dataset_id, "Overitten if previous task is not skipped. If set, ignore eval_dataset_name")
-pipe.add_parameter("eval_dataset_name", eval_dataset_name, "latest eval image dataset name")
-pipe.add_parameter("dataset_id", dataset_id, "latest eval caption dataset name")
-pipe.add_parameter("dataset_name", dataset_name, "latest eval caption dataset name")
-pipe.add_parameter("desc_draft_model_id", desc_draft_model_id, "latest trained model in draft state")
-pipe.add_parameter("desc_pub_model_name", desc_pub_model_name, "latest best model in published state")
+pipe.add_parameter("eval_dataset_id", "", "Overitten if previous task is not skipped. If set, ignore eval_dataset_name")
+pipe.add_parameter("eval_dataset_name", "eval_dataset_zip", "latest eval image dataset name")
+pipe.add_parameter("dataset_id", "", "latest eval caption dataset name")
+pipe.add_parameter("dataset_name", "Desc_Caption_EvalDataset", "latest eval caption dataset name")
+pipe.add_parameter("desc_draft_model_id", "", "latest trained model in draft state")
+pipe.add_parameter("desc_pub_model_name", "student_desc_model", "latest best model in published state")
 
 def pre_eval_callback(pipeline, node, param_override) -> bool:    
     print("Cloning step7_desc_model_evaluation id={}".format(node.base_task_id))      # param validation check
