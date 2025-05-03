@@ -47,7 +47,7 @@ params = {
     'desc_pub_model_name': 'student_desc_model',       # the published model name for comparison
 }
 task.connect(params)
-#task.execute_remotely(queue_name="desc_preparation")
+task.execute_remotely(queue_name="desc_preparation")
 task_params = task.get_parameters()
 logging.info("model_eval params=", task_params)
 

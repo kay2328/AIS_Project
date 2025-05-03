@@ -51,7 +51,7 @@ params = {
     'base_dataset_name': 'base_dataset_zip'
 }
 task.connect(params)
-#task.execute_remotely(queue_name="desc_preparation")
+task.execute_remotely(queue_name="desc_preparation")
 
 dataset_id = task.get_parameters()['General/split_dataset_id']
 dataset_name = task.get_parameters()['General/split_dataset_name']
