@@ -103,7 +103,7 @@ if remote_execution:
     print(f"Executing '{pipeline_name}' pipeline remotely")
     pipe.start(queue = "desc_preparation")
 else:
-    for node in pipe.nodes:
+    for node in pipe._nodes:
         node.job.task.set_script(working_dir="/content/AIS_Project/image_description/")
     print(f"Executing '{pipeline_name}' pipeline locally")
     pipe.start_locally(run_pipeline_steps_locally=True)
