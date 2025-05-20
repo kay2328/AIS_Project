@@ -10,12 +10,84 @@ from transformers import Seq2SeqTrainer
 import evaluate
 from pycocoevalcap.cider.cider import Cider
 #from pycocoevalcap.spice.spice import Spice
+from transformers import VisionEncoderDecoderModel, ViTFeatureExtractor, AutoTokenizer
+from enigmaai import util
+
+"""
+Load Model components for training
+"""
+class StudentModelLoader:
+    """
+    Loads a vision‐encoder‐decoder student model along with its
+    feature extractor and tokenizer, using a standard config.
+    """
+
+    DEFAULT_CONFIG = {
+        "encoder": "google/vit-base-patch16-224-in21k",
+        "decoder": "distilgpt2",
+        "max_target_len": 64,
+        "beam_size": 4,
+        "length_penalty": 0.7,
+        "no_repeat_ngram_size": 3,
+        "early_stopping": False,
+    }
+
+    def __init__(self, config: dict = None, device: torch.device = None):
+        cfg = dict(self.DEFAULT_CONFIG)
+        if config:
+            cfg.update(config)
+        self.encoder_name = cfg["encoder"]
+        self.decoder_name = cfg["decoder"]
+        self.max_target_len       = cfg["max_target_len"]
+        self.num_beams            = cfg["beam_size"]
+        self.length_penalty       = cfg["length_penalty"]
+        self.no_repeat_ngram_size = cfg["no_repeat_ngram_size"]
+        self.early_stopping       = cfg["early_stopping"]
+
+        self.device = util.get_device_name()
+        self._load()
+
+    def _load(self):
+        # 1) load preprocessors
+        self.feature_extractor = ViTFeatureExtractor.from_pretrained(self.encoder_name)
+        self.tokenizer         = AutoTokenizer.from_pretrained(self.decoder_name)
+        # 2) build model 
+        self.model = VisionEncoderDecoderModel.from_encoder_decoder_pretrained(
+            self.encoder_name,
+            self.decoder_name)
+        # 3) special tokens & config tweaks
+        self.tokenizer.add_special_tokens({"pad_token": "[PAD]"})
+        self.model.decoder.resize_token_embeddings(len(self.tokenizer))
+
+        cfg = self.model.config
+        cfg.pad_token_id           = self.tokenizer.pad_token_id
+        cfg.decoder_start_token_id = self.tokenizer.bos_token_id
+        cfg.eos_token_id           = self.tokenizer.eos_token_id
+        cfg.vocab_size             = cfg.decoder.vocab_size
+        cfg.max_length             = self.max_target_len
+        cfg.num_beams              = self.num_beams
+        cfg.length_penalty         = self.length_penalty
+        cfg.no_repeat_ngram_size   = self.no_repeat_ngram_size
+        cfg.early_stopping         = self.early_stopping
+
+        # 4) move to device
+        self.model.to(self.device)
+
+    def get_components(self):
+        """
+        Returns
+        -------
+        model : VisionEncoderDecoderModel
+        feature_extractor : ViTFeatureExtractor
+        tokenizer : AutoTokenizer
+        """
+        return self.model, self.feature_extractor, self.tokenizer
 
 """
 Dataset class
 """
 class CaptionDataset(Dataset):
-    def __init__(self, captions_json, image_root, feature_extractor, tokenizer, max_len):
+    def __init__(self, captions_json, image_root, feature_extractor, tokenizer, max_len=64):
         """
         captions_json: list of {"image": "path.jpg", "caption": "…"}
         """
@@ -43,6 +115,7 @@ class CaptionDataset(Dataset):
         labels[labels == self.tk.pad_token_id] = -100  # ignore pad in loss
         return {"pixel_values": pixel_values, "labels": labels}
 
+
 """
 Custom Seq2Seq Trainer
 """
@@ -56,10 +129,10 @@ class CleanSeq2SeqTrainer(Seq2SeqTrainer):
 Custom Data Collator
 """
 class CustomDataCollator:
-    def __init__(self, model, tokenizer, device):
+    def __init__(self, model, tokenizer):
         self.model     = model
         self.tokenizer = tokenizer
-        self.device    = device
+        self.device    = util.get_device_name()
     def __call__(self, batch):
         # 1) Stack the images
         pixel_values = torch.stack([ex["pixel_values"] for ex in batch])

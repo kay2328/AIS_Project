@@ -1,25 +1,22 @@
 from clearml import Task, Dataset, OutputModel
-#Task.add_requirements("requirements.txt")
 import os
 import logging
 import zipfile
 from pathlib import Path
 import torch
-from transformers import (
-    VisionEncoderDecoderModel,
-    ViTFeatureExtractor,
-    AutoTokenizer,
-    Seq2SeqTrainingArguments)
+from transformers import (VisionEncoderDecoderModel,ViTFeatureExtractor,AutoTokenizer,Seq2SeqTrainingArguments)
 # Force a non-interactive backend
 os.environ['MPLBACKEND'] = 'agg'
 import matplotlib.pyplot as plt
 import torch
 import sys
 import tempfile
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../src')))
+#sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../src')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 from enigmaai.config import Project, ConfigFactory
-from enigmaai.desc_util import CaptionDataset, ComputeMetrics, CustomDataCollator, CleanSeq2SeqTrainer
+from enigmaai.desc_util import CaptionDataset, ComputeMetrics, CustomDataCollator, CleanSeq2SeqTrainer, StudentModelLoader
 from enigmaai.desc_prep_util import find_dir_with_files
+from enigmaai import util
 import subprocess
 # Install absl-py on the fly so evaluate.load("rouge") can import it
 subprocess.check_call([sys.executable, "-m", "pip", "install", "absl-py"])
@@ -47,8 +44,12 @@ logger = task.get_logger()
 params = {
     'split_dataset_id': '',                # specific version of the dataset
     'split_dataset_name': 'Desc_Split_dataset',              # latest registered dataset
-    'base_dataset_id': '', #'26083b24ab0c47219a5e4f3fe026b085',#'2231b5b121924ed684d6560cf6839619',     # specific version of the dataset
-    'base_dataset_name': 'base_dataset_zip'
+    'base_dataset_id': '',     # specific version of the dataset
+    'base_dataset_name': 'base_dataset_zip',
+    'batch_size': 16,
+    'num_epochs': 10,
+    'lr': 1e-4,
+    'weight_decay': 0.01
 }
 task.connect(params)
 task.execute_remotely(queue_name="desc_preparation")
@@ -57,6 +58,12 @@ dataset_id = task.get_parameters()['General/split_dataset_id']
 dataset_name = task.get_parameters()['General/split_dataset_name']
 img_dataset_id = task.get_parameters()['General/base_dataset_id']
 img_dataset_name = task.get_parameters()['General/base_dataset_name']
+batch_size = task.get_parameters()['General/batch_size']
+num_epochs = task.get_parameters()['General/num_epochs']
+lr = task.get_parameters()['General/lr']
+weight_decay = task.get_parameters()['General/weight_decay']
+device = util.get_device_name()
+
 # validate task input params
 if not dataset_id and not dataset_name:
     task.mark_completed(status_message="No dataset provided. Nothing to train on. Ensure to execute task 5")
@@ -121,51 +128,25 @@ images_dir = find_dir_with_files(extract_path, "images")
 logging.info(f"Images downloaded to: {images_dir}")
 
 """
-Student model training configuration and set up
+Student model loaded for training and set up
 """
-# 4. Student & training config
-STUDENT_CONFIG = {"encoder": "google/vit-base-patch16-224-in21k", "decoder": "distilgpt2"}
-train_batch_size = 16
-eval_batch_size = 16
-num_epochs = 10 
-lr = 1e-4
-weight_decay=0.01
-max_target_len = 64
-beam_size = 4
-encoder = STUDENT_CONFIG["encoder"]
-decoder = STUDENT_CONFIG["decoder"]
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-def load_model(encoder, decoder):
-    feature_extractor = ViTFeatureExtractor.from_pretrained(encoder)
-    tokenizer = AutoTokenizer.from_pretrained(decoder)
-    model = VisionEncoderDecoderModel.from_encoder_decoder_pretrained(encoder, decoder)
-    tokenizer.add_special_tokens({"pad_token": "[PAD]"})
-    # Resize the decoder’s embeddings to match new vocab size
-    model.decoder.resize_token_embeddings(len(tokenizer))
-    model.config.pad_token_id = tokenizer.pad_token_id
-    # Tie special tokens
-    model.config.decoder_start_token_id = tokenizer.bos_token_id
-    model.config.eos_token_id           = tokenizer.eos_token_id
-    model.config.vocab_size             = model.config.decoder.vocab_size
-    model.config.max_length             = max_target_len
-    model.config.early_stopping         = True
-    model.config.no_repeat_ngram_size   = 3
-    model.config.num_beams              = beam_size
-    model.config.length_penalty         = 2.0
-    model.to(device)
-    return model, feature_extractor, tokenizer
-
-# 6. Load model and preprocessors
-model, feature_extractor, tokenizer = load_model(encoder, decoder)
-train_ds = CaptionDataset(train_json, images_dir, feature_extractor, tokenizer, max_target_len)
-val_ds   = CaptionDataset(val_json, images_dir, feature_extractor, tokenizer, max_target_len)
-collator_fn = CustomDataCollator(model, tokenizer, device)
+# Load model and preprocessors
+loader = StudentModelLoader()
+model, feature_extractor, tokenizer = loader.get_components()
+train_ds = CaptionDataset(train_json, images_dir, feature_extractor, tokenizer)
+val_ds   = CaptionDataset(val_json, images_dir, feature_extractor, tokenizer)
+collator_fn = CustomDataCollator(model, tokenizer)
 compute_metrics_fn = ComputeMetrics(tokenizer)
 
 """
 Model Training
 """
+# Student training config
+train_batch_size = batch_size
+eval_batch_size = batch_size
+num_epochs = num_epochs
+lr = lr
+weight_decay=weight_decay
 working_dir = Path(tempfile.mkdtemp()) / project_name
 working_dir.mkdir(parents=True, exist_ok=True)    
 print("Working temp directory at:", working_dir)
@@ -173,6 +154,7 @@ trainout_dir = working_dir / "outputs" / "models"
 tensorboard_dir = working_dir/ "outputs" / "tensorboard_logs"
 trainout_dir.mkdir(parents=True, exist_ok=True)
 tensorboard_dir.mkdir(parents=True, exist_ok=True)
+
 # TrainingArguments & Trainer
 training_args = Seq2SeqTrainingArguments(
     output_dir=trainout_dir,
@@ -187,7 +169,7 @@ training_args = Seq2SeqTrainingArguments(
     save_strategy="epoch",
     save_total_limit=2,  
     label_smoothing_factor=0.1,   # soften the training targets
-    fp16=torch.cuda.is_available(),
+    fp16=device,
     load_best_model_at_end=True,  
     metric_for_best_model="cider", # pick the checkpoint with highest cider
     greater_is_better=True,
@@ -201,8 +183,7 @@ trainer = CleanSeq2SeqTrainer(
     train_dataset=train_ds,
     eval_dataset=val_ds,
     data_collator=collator_fn,
-    compute_metrics=compute_metrics_fn
-)
+    compute_metrics=compute_metrics_fn)
 
 # Train
 results = trainer.train()
@@ -252,7 +233,4 @@ output_model.update_weights(weights_filename=zip_path)
 task.upload_artifact(name="student_desc_model", artifact_object=str(best_dir))
 task.set_parameter("General/output_model_id", output_model.id)
 print("Registered model id:", output_model.id)
-
-
-
 logging.info("Student training on ClearML complete.")
