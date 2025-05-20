@@ -142,11 +142,11 @@ compute_metrics_fn = ComputeMetrics(tokenizer)
 Model Training
 """
 # Student training config
-train_batch_size = batch_size
-eval_batch_size = batch_size
-num_epochs = num_epochs
-lr = lr
-weight_decay=weight_decay
+train_batch_size = int(batch_size)
+eval_batch_size = int(batch_size)
+num_epochs = int(num_epochs)
+lr = float(lr)
+weight_decay=float(weight_decay)
 working_dir = Path(tempfile.mkdtemp()) / project_name
 working_dir.mkdir(parents=True, exist_ok=True)    
 print("Working temp directory at:", working_dir)
