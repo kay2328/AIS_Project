@@ -11,8 +11,8 @@ import matplotlib.pyplot as plt
 import torch
 import sys
 import tempfile
-#sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../src')))
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../src')))
+#sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 from enigmaai.config import Project, ConfigFactory
 from enigmaai.desc_util import CaptionDataset, ComputeMetrics, CustomDataCollator, CleanSeq2SeqTrainer, StudentModelLoader
 from enigmaai.desc_prep_util import find_dir_with_files
