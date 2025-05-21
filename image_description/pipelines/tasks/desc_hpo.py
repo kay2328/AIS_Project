@@ -37,10 +37,10 @@ params = {
     'run_as_service': False,
     'test_queue': 'desc_preparation',  # Queue for test tasks
     #'processed_dataset_id': '99e286d358754697a37ad75c279a6f0a',  # Will be set from pipeline
-    'num_epochs': [5, 10], 
+    'num_epochs': [5], 
     'batch_size': [16],
     #'batch_size_max': 32, 
-    'lr': [5e-5, 1e-4],
+    'lr': [1e-4],
     #'learning_rate_max': 1e-4,
     #'weight_decay_max': 1e-2,
     'weight_decay': [1e-2],  # Default weight decay
