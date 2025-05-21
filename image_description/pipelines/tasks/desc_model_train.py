@@ -47,7 +47,7 @@ params = {
     'base_dataset_id': '',     # specific version of the dataset
     'base_dataset_name': 'base_dataset_zip',
     'batch_size': 16,
-    'num_epochs': 10,
+    'num_epochs': 1,
     'lr': 1e-4,
     'weight_decay': 0.01
 }
