@@ -34,7 +34,7 @@ params = {
     'num_epochs': [5, 10, 20],  # Reduced from 50 to 20 epochs
     'batch_size': [16, 32],
     #'batch_size_max': 32, 
-    'learning_rate': [6e-5, 8e-5, 1e-4, 2e-4],
+    'lr': [6e-5, 8e-5, 1e-4, 2e-4],
     #'learning_rate_max': 1e-4,
     #'weight_decay_max': 1e-2,
     'weight_decay': [1e-3, 5e-3, 1e-2],  # Default weight decay
@@ -58,7 +58,7 @@ hpo_task = HyperParameterOptimizer(
     hyper_parameters=[
         DiscreteParameterRange('General/num_epochs', values=list(task_params['General/num_epochs'])),
         DiscreteParameterRange('General/batch_size', values=list(task_params['General/batch_size'])), 
-        DiscreteParameterRange('General/learning_rate', values=list(task_params['General/learning_rate'])),  
+        DiscreteParameterRange('General/lr', values=list(task_params['General/lr'])),  
         DiscreteParameterRange('General/weight_decay', values=list(task_params['General/weight_decay']))],
     objective_metric_title='validation',
     objective_metric_series='cider',
