@@ -6,7 +6,7 @@ from clearml.automation import DiscreteParameterRange, UniformIntegerParameterRa
 import logging
 import time
 import json
-import yaml
+import ast
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../src')))
 from enigmaai.config import Project, ConfigFactory
 from enigmaai import util
@@ -62,10 +62,10 @@ if not base_task_id:
 hpo_task = HyperParameterOptimizer(
     base_task_id=base_task_id,
     hyper_parameters=[
-        DiscreteParameterRange('num_epochs', values=list(task_params['General/num_epochs'])),
-        DiscreteParameterRange('batch_size', values=list(task_params['General/batch_size'])), 
-        DiscreteParameterRange('lr', values=list(task_params['General/lr'])),  
-        DiscreteParameterRange('weight_decay', values=list(task_params['General/weight_decay']))],
+        DiscreteParameterRange('num_epochs', values=ast.literal_eval(task_params['General/num_epochs'])),
+        DiscreteParameterRange('batch_size', values=ast.literal_eval(task_params['General/batch_size'])), 
+        DiscreteParameterRange('lr', values=ast.literal_eval(task_params['General/lr'])),  
+        DiscreteParameterRange('weight_decay', values=ast.literal_eval(task_params['General/weight_decay']))],
     objective_metric_title='validation',
     objective_metric_series='cider',
     objective_metric_sign='max',
@@ -73,16 +73,7 @@ hpo_task = HyperParameterOptimizer(
     min_iteration_per_job=1,
     execution_queue=project.get('queue-gpu'),
     save_top_k_tasks_only=1,
-    parameter_override={
-        'num_epochs': params['num_epochs'],
-        'General/num_epochs': params['num_epochs'],
-        'batch_size': params['batch_size'],
-        'General/batch_size': params['batch_size'],
-        'lr': params['lr'],
-        'General/lr': params['lr'],
-        'weight_decay': params['weight_decay'],
-        'General/weight_decay': params['weight_decay']
-    })
+    )
 
 # Get the top performing experiments
 def get_top_task_exp():
