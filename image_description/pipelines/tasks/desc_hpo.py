@@ -33,7 +33,7 @@ task = Task.init(project_name=project_name,
 )
 
 params = {
-    'base_train_task_id': '0781db8b45c5423db459dbf1c88184e3', 
+    'base_train_task_id': 'de345f7c79c540d68ad6f4b017ddf26e', 
     'run_as_service': False,
     'test_queue': 'desc_preparation',  # Queue for test tasks
     #'processed_dataset_id': '99e286d358754697a37ad75c279a6f0a',  # Will be set from pipeline
