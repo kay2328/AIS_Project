@@ -10,6 +10,11 @@ import yaml
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../src')))
 from enigmaai.config import Project, ConfigFactory
 from enigmaai import util
+import subprocess
+# Install absl-py on the fly so evaluate.load("rouge") can import it
+subprocess.check_call([sys.executable, "-m", "pip", "install", "absl-py"])
+subprocess.check_call([sys.executable, "-m", "pip", "install", "rouge-score"])
+subprocess.check_call([sys.executable, "-m", "pip", "install", "tensorboardX"])
 
 # get project configurations
 project = ConfigFactory.get_config(Project.SCENE_DESCRIPTION)
@@ -41,7 +46,7 @@ params = {
 }
 
 task.connect(params)
-task_params = task.get_parameters()["General"]
+task_params = task.get_parameters()
 task.execute_remotely(queue_name=project.get('queue-gpu'))
 logger.info(f"model_HPO params={task_params}")
 
