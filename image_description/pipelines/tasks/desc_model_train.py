@@ -192,7 +192,8 @@ print(results)
 logger.report_scalar(
   title="validation",
   series="cider",
-  value=eval_results["eval_cider"]
+  value=eval_results["eval_cider"],
+  iteration=0
 )
 """
 Plotting loss curve graphs
