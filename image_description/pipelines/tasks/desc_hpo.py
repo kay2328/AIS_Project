@@ -45,7 +45,7 @@ params = {
     'weight_decay': [1e-3, 5e-3, 1e-2],  # Default weight decay
 }
 
-task.connect(params)
+params = task.connect(params)
 task_params = task.get_parameters()
 task.execute_remotely(queue_name=project.get('queue-gpu'))
 logger.info(f"model_HPO params={task_params}")
@@ -61,17 +61,27 @@ if not base_task_id:
 hpo_task = HyperParameterOptimizer(
     base_task_id=base_task_id,
     hyper_parameters=[
-        DiscreteParameterRange('General/num_epochs', values=list(task_params['General/num_epochs'])),
-        DiscreteParameterRange('General/batch_size', values=list(task_params['General/batch_size'])), 
-        DiscreteParameterRange('General/lr', values=list(task_params['General/lr'])),  
-        DiscreteParameterRange('General/weight_decay', values=list(task_params['General/weight_decay']))],
+        DiscreteParameterRange('num_epochs', values=list(task_params['General/num_epochs'])),
+        DiscreteParameterRange('batch_size', values=list(task_params['General/batch_size'])), 
+        DiscreteParameterRange('lr', values=list(task_params['General/lr'])),  
+        DiscreteParameterRange('weight_decay', values=list(task_params['General/weight_decay']))],
     objective_metric_title='validation',
     objective_metric_series='cider',
     objective_metric_sign='max',
     max_number_of_concurrent_tasks=5,
     min_iteration_per_job=1,
     execution_queue=project.get('queue-gpu'),
-    save_top_k_tasks_only=1)
+    save_top_k_tasks_only=1,
+    parameter_override={
+        'num_epochs': params['num_epochs'],
+        'General/num_epochs': params['num_epochs'],
+        'batch_size': params['batch_size'],
+        'General/batch_size': params['batch_size'],
+        'lr': params['lr'],
+        'General/lr': params['lr'],
+        'weight_decay': params['weight_decay'],
+        'General/weight_decay': params['weight_decay']
+    })
 
 # Get the top performing experiments
 def get_top_task_exp():
@@ -96,7 +106,7 @@ def get_top_task_exp():
 
 # Start the HPO task
 logger.info("Starting HPO task...")
-remote_execution = project.get("pipeline-remote-execution")
+remote_execution = True #project.get("pipeline-remote-execution")
 
 if remote_execution:
     if hpo_task.start(job_complete_callback=get_top_task_exp):
