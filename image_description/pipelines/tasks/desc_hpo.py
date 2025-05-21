@@ -1,7 +1,7 @@
 import sys
 import os
 from clearml import Task, Dataset
-from clearml.automation import HyperParameterOptimizer
+from clearml.automation import HyperParameterOptimizer, GridSearch
 from clearml.automation import DiscreteParameterRange, UniformIntegerParameterRange, UniformParameterRange
 import logging
 import time
@@ -69,8 +69,10 @@ hpo_task = HyperParameterOptimizer(
     objective_metric_title='validation',
     objective_metric_series='cider',
     objective_metric_sign='max',
-    max_number_of_concurrent_tasks=2,
+    optimizer_class=GridSearch,
+    max_number_of_concurrent_tasks=4,
     min_iteration_per_job=1,
+    pool_period_min=1.0,
     execution_queue=project.get('queue-gpu'),
     save_top_k_tasks_only=1,
     )
