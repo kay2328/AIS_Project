@@ -187,11 +187,12 @@ trainer = CleanSeq2SeqTrainer(
 
 # Train
 results = trainer.train()
-train_metrics, eval_metrics = results
+eval_results = trainer.evaluate()  
+print(results)
 logger.report_scalar(
   title="validation",
   series="cider",
-  value=eval_metrics["eval_cider"]
+  value=eval_results["eval_cider"]
 )
 """
 Plotting loss curve graphs
