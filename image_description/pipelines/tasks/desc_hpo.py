@@ -33,17 +33,17 @@ task = Task.init(project_name=project_name,
 )
 
 params = {
-    'base_train_task_id': 'de345f7c79c540d68ad6f4b017ddf26e', 
+    'base_train_task_id': 'e75ef1f7bfb14622a218b1e7f09ae08e', 
     'run_as_service': False,
     'test_queue': 'desc_preparation',  # Queue for test tasks
     #'processed_dataset_id': '99e286d358754697a37ad75c279a6f0a',  # Will be set from pipeline
-    'num_epochs': [5, 10, 20],  # Reduced from 50 to 20 epochs
+    'num_epochs': [5, 10],  # Reduced from 50 to 20 epochs
     'batch_size': [16, 32],
     #'batch_size_max': 32, 
-    'lr': [6e-5, 8e-5, 1e-4, 2e-4],
+    'lr': [5e-5, 1e-4],
     #'learning_rate_max': 1e-4,
     #'weight_decay_max': 1e-2,
-    'weight_decay': [1e-3, 5e-3, 1e-2],  # Default weight decay
+    'weight_decay': [1e-2],  # Default weight decay
 }
 
 params = task.connect(params)
