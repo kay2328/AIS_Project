@@ -62,10 +62,10 @@ if not base_task_id:
 hpo_task = HyperParameterOptimizer(
     base_task_id=base_task_id,
     hyper_parameters=[
-        DiscreteParameterRange('num_epochs', values=ast.literal_eval(task_params['General/num_epochs'])),
-        DiscreteParameterRange('batch_size', values=ast.literal_eval(task_params['General/batch_size'])), 
-        DiscreteParameterRange('lr', values=ast.literal_eval(task_params['General/lr'])),  
-        DiscreteParameterRange('weight_decay', values=ast.literal_eval(task_params['General/weight_decay']))],
+        DiscreteParameterRange('General/num_epochs', values=ast.literal_eval(task_params['General/num_epochs'])),
+        DiscreteParameterRange('General/batch_size', values=ast.literal_eval(task_params['General/batch_size'])), 
+        DiscreteParameterRange('General/lr', values=ast.literal_eval(task_params['General/lr'])),  
+        DiscreteParameterRange('General/weight_decay', values=ast.literal_eval(task_params['General/weight_decay']))],
     objective_metric_title='validation',
     objective_metric_series='cider',
     objective_metric_sign='max',
