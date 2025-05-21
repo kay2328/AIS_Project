@@ -37,8 +37,8 @@ params = {
     'run_as_service': False,
     'test_queue': 'desc_preparation',  # Queue for test tasks
     #'processed_dataset_id': '99e286d358754697a37ad75c279a6f0a',  # Will be set from pipeline
-    'num_epochs': [5, 10],  # Reduced from 50 to 20 epochs
-    'batch_size': [16, 32],
+    'num_epochs': [5, 10], 
+    'batch_size': [16],
     #'batch_size_max': 32, 
     'lr': [5e-5, 1e-4],
     #'learning_rate_max': 1e-4,
@@ -69,7 +69,7 @@ hpo_task = HyperParameterOptimizer(
     objective_metric_title='validation',
     objective_metric_series='cider',
     objective_metric_sign='max',
-    max_number_of_concurrent_tasks=5,
+    max_number_of_concurrent_tasks=2,
     min_iteration_per_job=1,
     execution_queue=project.get('queue-gpu'),
     save_top_k_tasks_only=1,
