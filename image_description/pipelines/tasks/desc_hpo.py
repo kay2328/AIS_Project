@@ -50,7 +50,7 @@ task_params = task.get_parameters()
 task.execute_remotely(queue_name=project.get('queue-gpu'))
 logger.info(f"model_HPO params={task_params}")
 
-base_task_id = task_params['base_train_task_id']
+base_task_id = task_params['General/base_train_task_id']
 
 # Exit if not base task
 if not base_task_id:
@@ -61,10 +61,10 @@ if not base_task_id:
 hpo_task = HyperParameterOptimizer(
     base_task_id=base_task_id,
     hyper_parameters=[
-        DiscreteParameterRange('General/num_epochs', values=list(task_params['num_epochs'])),
-        DiscreteParameterRange('General/batch_size', values=list(task_params['batch_size'])), 
-        DiscreteParameterRange('General/lr', values=list(task_params['lr'])),  
-        DiscreteParameterRange('General/weight_decay', values=list(task_params['weight_decay']))],
+        DiscreteParameterRange('General/num_epochs', values=list(task_params['General/num_epochs'])),
+        DiscreteParameterRange('General/batch_size', values=list(task_params['General/batch_size'])), 
+        DiscreteParameterRange('General/lr', values=list(task_params['General/lr'])),  
+        DiscreteParameterRange('General/weight_decay', values=list(task_params['General/weight_decay']))],
     objective_metric_title='validation',
     objective_metric_series='cider',
     objective_metric_sign='max',
