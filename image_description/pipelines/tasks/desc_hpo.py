@@ -35,7 +35,7 @@ task = Task.init(project_name=project_name,
 params = {
     'base_train_task_id': 'e75ef1f7bfb14622a218b1e7f09ae08e', 
     'run_as_service': False,
-    'time_limit_minutes': 150.0, 
+    'time_limit_minutes': 100.0, 
     'test_queue': 'desc_preparation',  
     'num_epochs': [1, 2], 
     'batch_size': [16],
@@ -80,7 +80,7 @@ remote_execution = True #project.get("pipeline-remote-execution")
 hpo_task.start()  
 #hpo_task.set_time_limit(in_minutes=float(task_params['General/time_limit_minutes']))
 # wait until optimization completed or timed-out
-hpo_task.wait()
+time.sleep(float(params['General/time_limit_minutes']) * 60) 
 # Get the top performing experiments
 try:
     top = hpo_task.get_top_experiments(top_k=1) 
