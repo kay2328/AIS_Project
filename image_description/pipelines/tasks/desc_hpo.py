@@ -80,7 +80,7 @@ remote_execution = True #project.get("pipeline-remote-execution")
 hpo_task.start()  
 #hpo_task.set_time_limit(in_minutes=float(task_params['General/time_limit_minutes']))
 # wait until optimization completed or timed-out
-time.sleep(float(params['General/time_limit_minutes']) * 60) 
+time.sleep(float(params['time_limit_minutes']) * 60) 
 # Get the top performing experiments
 try:
     top = hpo_task.get_top_experiments(top_k=1) 
