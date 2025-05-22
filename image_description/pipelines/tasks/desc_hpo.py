@@ -35,6 +35,7 @@ task = Task.init(project_name=project_name,
 params = {
     'base_train_task_id': 'e75ef1f7bfb14622a218b1e7f09ae08e', 
     'run_as_service': False,
+    'time_limit_minutes': 30.0, 
     'test_queue': 'desc_preparation',  
     'num_epochs': [1, 2], 
     'batch_size': [16],
@@ -70,24 +71,28 @@ hpo_task = HyperParameterOptimizer(
     pool_period_min=0.25,
     execution_queue=project.get('queue-gpu'),
     save_top_k_tasks_only=2)
-hpo_task.set_report_period(0.25)
+#hpo_task.set_report_period(0.25)
 # Start the HPO task
 logger.info("Starting HPO task...")
 remote_execution = True #project.get("pipeline-remote-execution")
 hpo_task.start()  
-hpo_task.set_time_limit(in_minutes=30.0)
+hpo_task.set_time_limit(in_minutes=float(task_params['General/time_limit_minutes']))
 # wait until optimization completed or timed-out
-hpo_task.wait()
+#hpo_task.wait()
 # Get the top performing experiments
 try:
-    best = hpo_task.get_top_experiments(top_k=1)[0]
-    logger.info(f"Best so far: {best.id}")
-    bp = best.get_parameters()
-    mts = best.get_all_reported_scalars().get('validation', {})
-    best_cider = mts.get('cider')
-    task.upload_artifact('best_parameters', {'parameters': bp, 'best_metrics': best_cider})
-    bm = best.models.output[0]
-    task.set_parameter("General/best_model_id", bm.id)
+    top = hpo_task.get_top_experiments(top_k=1) 
+    if top:
+        best = top[0]
+        logger.info(f"Best so far: {best.id}")
+        bp = best.get_parameters()
+        mts = best.get_all_reported_scalars().get('validation', {})
+        best_cider = mts.get('cider')
+        task.upload_artifact('best_parameters', {'parameters': bp, 'best_metrics': best_cider})
+        bm = best.models.output[0]
+        task.set_parameter("General/best_model_id", bm.id)
+    else:
+        logger.warning("No experiments completed yet. This might be normal if the optimization just started.")
 except Exception as e:
     logger.error(f"Failed to get top experiments: {e}")
     raise      
