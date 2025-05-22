@@ -69,13 +69,14 @@ hpo_task = HyperParameterOptimizer(
     compute_time_limit=None,
     #optimization_time_limit=float(task_params['General/time_limit_minutes']) * 60,
     #optimizer_class=GridSearch,
-    total_max_jobs=10,
-    max_iteration_per_job=30,
+    total_max_jobs=3,
+    min_iteration_per_job=1,
+    max_iteration_per_job=3,
     max_number_of_concurrent_tasks=5,
-    pool_period_min=0.25,
+    pool_period_min=5.0,
     execution_queue=project.get('queue-gpu'),
     save_top_k_tasks_only=2)
-hpo_task.set_report_period(0.25)
+hpo_task.set_report_period(5.0)
 #hpo_task.set_time_limit(in_minutes=float(task_params['General/time_limit_minutes']))
 
 """
