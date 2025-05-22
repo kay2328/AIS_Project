@@ -75,7 +75,7 @@ hpo_task.set_report_period(0.25)
 logger.info("Starting HPO task...")
 remote_execution = True #project.get("pipeline-remote-execution")
 hpo_task.start()  
-hpo_task.set_time_limit(in_minutes=150.0)
+hpo_task.set_time_limit(in_minutes=30.0)
 # wait until optimization completed or timed-out
 hpo_task.wait()
 # Get the top performing experiments
