@@ -39,11 +39,8 @@ params = {
     #'processed_dataset_id': '99e286d358754697a37ad75c279a6f0a',  # Will be set from pipeline
     'num_epochs': [2], 
     'batch_size': [16],
-    #'batch_size_max': 32, 
     'lr': [1e-4],
-    #'learning_rate_max': 1e-4,
-    #'weight_decay_max': 1e-2,
-    'weight_decay': [1e-2],  # Default weight decay
+    'weight_decay': [1e-2]  # Default weight decay
 }
 
 params = task.connect(params)
