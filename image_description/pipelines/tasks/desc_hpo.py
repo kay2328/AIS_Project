@@ -73,7 +73,7 @@ hpo_task = HyperParameterOptimizer(
     pool_period_min=0.25,
     execution_queue=project.get('queue-gpu'),
     save_top_k_tasks_only=2)
-#hpo_task.set_report_period(0.25)
+hpo_task.set_report_period(0.25)
 # Start the HPO task
 logger.info("Starting HPO task...")
 remote_execution = True #project.get("pipeline-remote-execution")
