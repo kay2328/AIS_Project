@@ -35,9 +35,8 @@ task = Task.init(project_name=project_name,
 params = {
     'base_train_task_id': 'e75ef1f7bfb14622a218b1e7f09ae08e', 
     'run_as_service': False,
-    'test_queue': 'desc_preparation',  # Queue for test tasks
-    #'processed_dataset_id': '99e286d358754697a37ad75c279a6f0a',  # Will be set from pipeline
-    'num_epochs': [2], 
+    'test_queue': 'desc_preparation',  
+    'num_epochs': [1, 2], 
     'batch_size': [16],
     'lr': [1e-4],
     'weight_decay': [1e-2]  # Default weight decay
@@ -71,8 +70,20 @@ hpo_task = HyperParameterOptimizer(
     pool_period_min=30.0,
     execution_queue=project.get('queue-gpu'),
     save_top_k_tasks_only=1,
+    parameter_override={
+        'test_queue': task_params['General/test_queue'],
+        'General/test_queue': task_params['General/test_queue'],
+        'num_epochs': ast.literal_eval(task_params['General/num_epochs']),
+        'General/num_epochs': ast.literal_eval(task_params['General/num_epochs']),
+        'batch_size': ast.literal_eval(task_params['General/batch_size']),
+        'General/batch_size': ast.literal_eval(task_params['General/batch_size']),
+        'lr': ast.literal_eval(task_params['General/lr']),
+        'General/lr': ast.literal_eval(task_params['General/lr']),
+        'weight_decay': ast.literal_eval(task_params['General/weight_decay']),
+        'General/weight_decay': ast.literal_eval(task_params['General/weight_decay'])
+    }
     )
-
+hpo_task.set_report_period(30.0)
 # Get the top performing experiments
 def on_job_complete(job_id, objective_value, objective_iteration, job_parameters, top_performance_job_id):
     best = hpo_task.get_top_experiments(top_k=1)[0]
