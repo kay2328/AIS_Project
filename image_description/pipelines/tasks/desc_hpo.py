@@ -66,6 +66,7 @@ hpo_task = HyperParameterOptimizer(
     objective_metric_title='validation',
     objective_metric_series='cider',
     objective_metric_sign='max',
+    compute_time_limit=None,
     optimization_time_limit=float(task_params['General/time_limit_minutes']) * 60,
     optimizer_class=GridSearch,
     max_number_of_concurrent_tasks=5,
