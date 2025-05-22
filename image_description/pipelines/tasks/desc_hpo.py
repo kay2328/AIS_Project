@@ -78,7 +78,7 @@ hpo_task = HyperParameterOptimizer(
 logger.info("Starting HPO task...")
 remote_execution = True #project.get("pipeline-remote-execution")
 hpo_task.start()  
-hpo_task.set_time_limit(in_minutes=float(task_params['General/time_limit_minutes']))
+#hpo_task.set_time_limit(in_minutes=float(task_params['General/time_limit_minutes']))
 # wait until optimization completed or timed-out
 hpo_task.wait()
 # Get the top performing experiments
