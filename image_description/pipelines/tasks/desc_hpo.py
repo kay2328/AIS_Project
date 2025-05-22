@@ -37,7 +37,7 @@ params = {
     'run_as_service': False,
     'test_queue': 'desc_preparation',  # Queue for test tasks
     #'processed_dataset_id': '99e286d358754697a37ad75c279a6f0a',  # Will be set from pipeline
-    'num_epochs': [5], 
+    'num_epochs': [2], 
     'batch_size': [16],
     #'batch_size_max': 32, 
     'lr': [1e-4],
