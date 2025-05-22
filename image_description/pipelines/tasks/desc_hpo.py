@@ -67,17 +67,17 @@ hpo_task = HyperParameterOptimizer(
     objective_metric_series='cider',
     objective_metric_sign='max',
     compute_time_limit=None,
-    #optimization_time_limit=float(task_params['General/time_limit_minutes']) * 60,
-    #optimizer_class=GridSearch,
-    total_max_jobs=3,
-    min_iteration_per_job=1,
-    max_iteration_per_job=3,
+    optimization_time_limit=float(task_params['General/time_limit_minutes']) * 60,
+    optimizer_class=GridSearch,
+    #total_max_jobs=3,
+    #min_iteration_per_job=1,
+    #max_iteration_per_job=3,
     max_number_of_concurrent_tasks=5,
-    pool_period_min=5.0,
+    pool_period_min=0.25,
     execution_queue=project.get('queue-gpu'),
     save_top_k_tasks_only=2)
-hpo_task.set_report_period(5.0)
-#hpo_task.set_time_limit(in_minutes=float(task_params['General/time_limit_minutes']))
+hpo_task.set_report_period(0.25)
+hpo_task.set_time_limit(in_minutes=float(task_params['General/time_limit_minutes']))
 
 """
 # Start the HPO task
@@ -111,7 +111,7 @@ logger.info("Optimizer stopped")
 
 """
 logger.info("Starting HPO task...")
-remote_execution = True #project.get("pipeline-remote-execution")
+remote_execution = False #project.get("pipeline-remote-execution")
 
 def get_top_task_exp(job_id, objective_value, objective_iteration, 
                      job_parameters,top_performance_job_id):
@@ -129,6 +129,7 @@ def get_top_task_exp(job_id, objective_value, objective_iteration,
     task.upload_artifact('best_parameters', best_results)
     print("best results:", best_results)    
     # task output info
+    print(best_task.models.output)
     best_model = best_task.models.output[0]
     task.set_parameter("best_model_project", project_name)
     task.set_parameter("best_model_task_id", best_model.name)
