@@ -35,7 +35,7 @@ task = Task.init(project_name=project_name,
 params = {
     'base_train_task_id': 'e75ef1f7bfb14622a218b1e7f09ae08e', 
     'run_as_service': False,
-    'time_limit_minutes': 100.0, 
+    'time_limit_minutes': 160.0, 
     'test_queue': 'desc_preparation',  
     'num_epochs': [1, 2], 
     'batch_size': [16],
@@ -129,7 +129,7 @@ def get_top_task_exp(job_id, objective_value, objective_iteration,
     task.upload_artifact('best_parameters', best_results)
     print("best results:", best_results)    
     # task output info
-    print(best_task.models.output)
+    logger.info(best_task.models.output)
     best_model = best_task.models.output[0]
     task.set_parameter("best_model_project", project_name)
     task.set_parameter("best_model_task_id", best_model.name)
