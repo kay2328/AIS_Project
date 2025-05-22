@@ -66,6 +66,7 @@ hpo_task = HyperParameterOptimizer(
     objective_metric_title='validation',
     objective_metric_series='cider',
     objective_metric_sign='max',
+    optimization_time_limit=float(task_params['General/time_limit_minutes']) * 60,
     optimizer_class=GridSearch,
     max_number_of_concurrent_tasks=5,
     pool_period_min=0.25,
@@ -78,7 +79,7 @@ remote_execution = True #project.get("pipeline-remote-execution")
 hpo_task.start()  
 hpo_task.set_time_limit(in_minutes=float(task_params['General/time_limit_minutes']))
 # wait until optimization completed or timed-out
-#hpo_task.wait()
+hpo_task.wait()
 # Get the top performing experiments
 try:
     top = hpo_task.get_top_experiments(top_k=1) 
