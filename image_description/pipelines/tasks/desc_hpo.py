@@ -72,11 +72,11 @@ hpo_task = HyperParameterOptimizer(
     optimizer_class=GridSearch,
     #max_number_of_concurrent_tasks=4,
     min_iteration_per_job=100,
-    pool_period_min=1.0,
+    pool_period_min=0.25,
     execution_queue=project.get('queue-gpu'),
     save_top_k_tasks_only=1,
     )
-hpo_task.set_report_period(1.0) 
+hpo_task.set_report_period(0.25) 
 # Get the top performing experiments
 def get_top_task_exp():
     best_task = hpo_task.get_top_experiments(top_k=1)[0] 
