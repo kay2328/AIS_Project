@@ -70,15 +70,34 @@ hpo_task = HyperParameterOptimizer(
     objective_metric_series='cider',
     objective_metric_sign='max',
     optimizer_class=GridSearch,
-    #max_number_of_concurrent_tasks=4,
-    #min_iteration_per_job=1,
-    #max_iteration_per_job=int(ast.literal_eval(task_params['General/num_epochs'])[-1]),
-    pool_period_min=0.1,
+    max_number_of_concurrent_tasks=5,
+    pool_period_min=30.0,
     execution_queue=project.get('queue-gpu'),
     save_top_k_tasks_only=1,
     )
-hpo_task.set_report_period(0.1) 
+
 # Get the top performing experiments
+def on_job_complete(job_id, objective_value, objective_iteration, job_parameters, top_performance_job_id):
+    best = hpo_task.get_top_experiments(top_k=1)[0]
+    logger.info(f"Best so far: {best.id}")
+    bp = best.get_parameters()
+    mts = best.get_all_reported_scalars().get('validation', {})
+    best_cider = mts.get('cider')
+    task.upload_artifact('best_parameters', {'parameters': bp, 'best_metrics': best_cider})
+    bm = best.models.output[0]
+    task.set_parameter("General/best_model_id", bm.id)
+
+
+# Start the HPO task
+logger.info("Starting HPO task...")
+remote_execution = True #project.get("pipeline-remote-execution")
+hpo_task.start(job_complete_callback=on_job_complete)        
+# wait until optimization completed or timed-out
+hpo_task.wait()
+# make sure we stop all jobs
+hpo_task.stop()
+
+"""
 def get_top_task_exp(job_id, objective_value, objective_iteration, 
                      job_parameters,top_performance_job_id):
     best_task = hpo_task.get_top_experiments(top_k=1)[0] 
@@ -99,11 +118,6 @@ def get_top_task_exp(job_id, objective_value, objective_iteration,
     task.set_parameter("best_model_project", project_name)
     task.set_parameter("best_model_task_id", best_model.name)
     task.set_parameter("best_model_id", best_model.id)
-
-# Start the HPO task
-logger.info("Starting HPO task...")
-remote_execution = True #project.get("pipeline-remote-execution")
-
 if remote_execution:
     if hpo_task.start(job_complete_callback=get_top_task_exp):
         print(f"Executing HPO remotely")
@@ -114,9 +128,4 @@ else:
     if hpo_task.start_locally(job_complete_callback=get_top_task_exp):
         print(f"Executing HPO locally")
     else:
-        print("HPO failed to start locally")
-        
-# wait until optimization completed or timed-out
-hpo_task.wait()
-# make sure we stop all jobs
-hpo_task.stop()
+        print("HPO failed to start locally")"""
