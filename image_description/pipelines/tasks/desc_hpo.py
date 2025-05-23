@@ -46,7 +46,7 @@ params = {
 
 params = task.connect(params)
 task_params = task.get_parameters()
-task.execute_remotely(queue_name=project.get('queue-gpu'))
+#task.execute_remotely(queue_name=project.get('queue-gpu'))
 logger.info(f"model_HPO params={task_params}")
 
 base_task_id = task_params['General/base_train_task_id']
@@ -113,7 +113,7 @@ logger.info("Optimizer stopped")
 
 """
 logger.info("Starting HPO task...")
-remote_execution = True #project.get("pipeline-remote-execution")
+remote_execution = False #project.get("pipeline-remote-execution")
 
 def get_top_task_exp(job_id, objective_value, objective_iteration, 
                      job_parameters,top_performance_job_id):
