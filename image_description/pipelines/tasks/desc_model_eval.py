@@ -41,7 +41,7 @@ params = {
     'eval_dataset_name': 'eval_dataset_zip',
     'desc_draft_model_id': 'aa36f7ab4fbb4f59b6966e9ccb013c76',    # the unpublished model to evaluate 
     'desc_pub_model_name': 'student_desc_model',       # the published model name for comparison
-    'batch_size': 16
+    'eval_batch_size': 16
 }
 task.connect(params)
 task.execute_remotely(queue_name="desc_preparation")
@@ -54,7 +54,7 @@ img_dataset_id = task.get_parameters()['General/eval_dataset_id']
 img_dataset_name = task.get_parameters()['General/eval_dataset_name']
 draft_model_id = task.get_parameters()['General/desc_draft_model_id']
 pub_model_name = task.get_parameters()['General/desc_pub_model_name']
-batch_size = int(task.get_parameters()['General/batch_size'])
+batch_size = int(task.get_parameters()['General/eval_batch_size'])
 
 # validate task input params
 if not dataset_id and not dataset_name:

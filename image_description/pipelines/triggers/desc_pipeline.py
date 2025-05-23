@@ -222,11 +222,11 @@ Step 6: Model hyperparameter optimisation
 """
 #1440.0, [10,20], [16, 32], [1e-5, 5e-5, 1e-4], [1e-3, 1e-2]
 # model optimisation settings
-pipe.add_parameter("time_limit_minutes", 70, "Maximum optimization time limit in minutes")
-pipe.add_parameter("num_epochs", [1], "list of epochs")
+pipe.add_parameter("time_limit_minutes", 1440.0, "Maximum optimization time limit in minutes")
+pipe.add_parameter("num_epochs", [10,20], "list of epochs")
 pipe.add_parameter("batch_size", [16, 32], "list of batch size")
-pipe.add_parameter("lr", [1e-4], "list of learning rate")
-pipe.add_parameter("weight_decay", [1e-2], "weight decay values in list")
+pipe.add_parameter("lr", [1e-5, 5e-5, 1e-4], "list of learning rate")
+pipe.add_parameter("weight_decay", [1e-3,1e-2], "weight decay values in list")
 
 def pre_hpo_callback(pipeline, node, param_override) -> bool:  
     print("Cloning step7_desc_model_hpo id={}".format(node.base_task_id))    
@@ -311,7 +311,7 @@ eval_dataset_id= '',
 eval_dataset_name= 'eval_dataset_zip',
 desc_draft_model_id= '',       # the unpublished model to evaluate 
 desc_pub_model_name= 'student_desc_model'
-batch_size: 16
+eval_batch_size= 16
 
 pipe.add_parameter("eval_dataset_id", "", "Overitten if previous task is not skipped. If set, ignore eval_dataset_name")
 pipe.add_parameter("eval_dataset_name", "eval_dataset_zip", "latest eval image dataset name")
@@ -319,7 +319,7 @@ pipe.add_parameter("dataset_id", "", "latest eval caption dataset name")
 pipe.add_parameter("dataset_name", "Desc_Caption_EvalDataset", "latest eval caption dataset name")
 pipe.add_parameter("desc_draft_model_id", "", "latest trained model in draft state")
 pipe.add_parameter("desc_pub_model_name", "student_desc_model", "latest best model in published state")
-pipe.add_parameter("batch_size", 16, "eval batch size")
+pipe.add_parameter("eval_batch_size", int(16), "eval batch size")
 
 def pre_eval_callback(pipeline, node, param_override) -> bool:    
     print("Cloning step8_desc_model_evaluation id={}".format(node.base_task_id))      # param validation check
@@ -341,7 +341,7 @@ pipe.add_step(
         "General/eval_dataset_name": "${pipeline.eval_dataset_name}",
         "General/desc_draft_model_id": "${desc_model_hpo.parameters.General/best_model_id}",
         "General/pub_model_name": "${pipeline.desc_pub_model_name}",
-        "General/batch_size": "${pipeline.batch_size}"
+        "General/eval_batch_size": "${pipeline.eval_batch_size}"
     },
     pre_execute_callback=pre_eval_callback,
     post_execute_callback=post_eval_callback
