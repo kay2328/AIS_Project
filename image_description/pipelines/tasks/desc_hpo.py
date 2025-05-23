@@ -134,6 +134,7 @@ def get_top_task_exp(job_id, objective_value, objective_iteration,
     task.set_parameter("best_model_project", project_name)
     task.set_parameter("best_model_task_id", best_model.name)
     task.set_parameter("best_model_id", best_model.id)
+    task.upload_artifact('best_model_id', best_model.id)
 if remote_execution:
     if hpo_task.start(job_complete_callback=get_top_task_exp):
         print(f"Executing HPO remotely")
