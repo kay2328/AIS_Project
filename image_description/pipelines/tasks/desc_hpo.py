@@ -113,7 +113,7 @@ logger.info("Optimizer stopped")
 
 """
 logger.info("Starting HPO task...")
-remote_execution = False #project.get("pipeline-remote-execution")
+remote_execution = True #project.get("pipeline-remote-execution")
 
 def get_top_task_exp(job_id, objective_value, objective_iteration, 
                      job_parameters,top_performance_job_id):
