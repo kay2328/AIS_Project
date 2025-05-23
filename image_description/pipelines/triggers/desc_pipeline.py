@@ -277,7 +277,7 @@ def post_processing_callback(pipeline, node) -> None:
 
 pipe.add_step(
     name="eval_desc_generation",
-    parents=["EvalData_Mapping"],
+    parents=["EvalData_Mapping", "desc_model_hpo"],
     base_task_project=project_name,
     base_task_name="step4_desc_evalcaption_generation",
     parameter_override={
