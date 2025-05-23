@@ -6,13 +6,9 @@ from pathlib import Path
 import logging
 import torch
 from transformers import (
-    VisionEncoderDecoderModel,
-    ViTFeatureExtractor,
-    AutoTokenizer,
     Seq2SeqTrainingArguments,
     Seq2SeqTrainer
 )
-from PIL import Image
 import tempfile, zipfile
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../src')))
 from enigmaai import util

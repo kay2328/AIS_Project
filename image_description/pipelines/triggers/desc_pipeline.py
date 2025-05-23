@@ -30,8 +30,6 @@ uploaded. If those datasets are not uploaded, please put in the base_dataset_url
 Alternatively, before running the pipeline with default settings, upload the dataset using the following tasks from
 the ClearML WebUI:
 
-Upload Base Dataset - upload base dataset. This will trigger default pipeline to run in CD phase (NOT IMPLEMENTED)
-Upload Evaluation Dataset - upload base dataset. This will trigger default pipeline to run in CD phase (NOT IMPLEMENTED)
 """
 import os
 os.chdir("/content/AIS_Project/")
@@ -137,41 +135,7 @@ pipe.add_step(
 )
 
 """ 
-STEP 4: Test Data Reference description generation
-"""
-dataset_id = ""
-dataset_name = "Desc_Eval_Dataset"
-eval_dataset_id = ''
-eval_dataset_name = "eval_dataset_zip"
-
-pipe.add_parameter("dataset_id", "", "latest id of eval data img-label mapping from step 2")
-pipe.add_parameter("dataset_name", "Desc_Eval_Dataset", "latest of eval data img-label name from step 2")
-pipe.add_parameter("eval_dataset_id", "", "latest of eval_dataset_zip id")
-pipe.add_parameter("eval_dataset_name", "eval_dataset_zip", "latest of eval_dataset_zip name")
-
-def pre_processing_callback(pipeline, node, param_override) -> bool:
-    print("Cloning step4_desc_evalcaption_generation id={}".format(node.base_task_id))    
-    return True
-def post_processing_callback(pipeline, node) -> None:
-    print("Completed step4_desc_evalcaption_generation id={} {}".format(node.base_task_id, node.executed))    
-    return
-
-pipe.add_step(
-    name="eval_desc_generation",
-    parents=["EvalData_Mapping", "base_desc_generation"],
-    base_task_project=project_name,
-    base_task_name="step4_desc_evalcaption_generation",
-    parameter_override={
-        "General/dataset_id": "${EvalData_Mapping.parameters.General/output_dataset_id}",
-        "General/dataset_name": "${pipeline.dataset_name}",
-        "General/eval_dataset_id": "${pipeline.eval_dataset_id}", 
-        "General/eval_dataset_name": "${pipeline.eval_dataset_name}"
-    },
-    pre_execute_callback=pre_processing_callback,
-    post_execute_callback=post_processing_callback
-)
-""" 
-STEP 5: Splitting Train Dataset
+STEP 4: Splitting Train Dataset
 """
 # it will get dataset_id from step 3, if not provided, this will be used
 cap_dataset_id= ''
@@ -209,7 +173,7 @@ pipe.add_step(
 )
 
 """ 
-STEP 6: Student Model training
+STEP 5: Student Model training
 """
 """ 
 def load_hyp_config(model_variant) -> dict:
@@ -246,16 +210,88 @@ pipe.add_step(
     base_task_project=project_name,
     base_task_name="step6_desc_model_training",
     parameter_override={
-        "General/split_dataset_id": "${train_val_splitting.parameters.General/output_dataset_id}",# "${pipeline.split_dataset_id}",   
+        "General/split_dataset_id": "${train_val_splitting.parameters.General/output_dataset_id}",
         "General/split_dataset_name": "${pipeline.split_dataset_name}", 
         "General/base_dataset_id": "${pipeline.base_dataset_id}", 
         "General/base_dataset_name": "${pipeline.base_dataset_name}"},
     pre_execute_callback=pre_training_callback,
     post_execute_callback=post_training_callback
 )
+"""
+Step 6: Model hyperparameter optimisation
+"""
+# model optimisation settings
+pipe.add_parameter("time_limit_minutes", 1440.0, "Maximum optimization time limit in minutes")
+pipe.add_parameter("num_epochs", [10, 20], "list of epochs")
+pipe.add_parameter("batch_size", [16, 32], "list of batch size")
+pipe.add_parameter("lr", [1e-5, 5e-5, 1e-4], "list of learning rate")
+pipe.add_parameter("weight_decay", [1e-3, 1e-2], "weight decay values in list")
+
+def pre_hpo_callback(pipeline, node, param_override) -> bool:  
+    print("Cloning step7_desc_model_hpo id={}".format(node.base_task_id))    
+    print("Cloning Task id={} with parameters: {}".format(
+        node.base_task_id, param_override))
+    return True
+            
+def post_hpo_callback(pipeline, node) -> None:
+    print("Completed step7_desc_model_hpo id={} {}".format(node.base_task_id, node.executed))    
+    return
+
+pipe.add_step(
+    name="desc_model_hpo",
+    parents=["desc_model_training"],
+    base_task_project=project_name,
+    base_task_name="step7_desc_model_hpo",
+    parameter_override={
+        "General/base_task_id": "${desc_model_training.id}",   
+        "General/time_limit_minutes": "${pipeline.time_limit_minutes}",       
+        "General/num_epochs": "${pipeline.num_epochs}",
+        "General/batch_size": "${pipeline.batch_size}",
+        "General/lr": "${pipeline.lr}",
+        "General/weight_decay": "${pipeline.weight_decay}"
+    },
+    pre_execute_callback=pre_hpo_callback,
+    post_execute_callback=post_hpo_callback
+)
+
+""" 
+STEP 7: Test Data Reference description generation
+"""
+dataset_id = ""
+dataset_name = "Desc_Eval_Dataset"
+eval_dataset_id = ''
+eval_dataset_name = "eval_dataset_zip"
+
+pipe.add_parameter("dataset_id", "", "latest id of eval data img-label mapping from step 2")
+pipe.add_parameter("dataset_name", "Desc_Eval_Dataset", "latest of eval data img-label name from step 2")
+pipe.add_parameter("eval_dataset_id", "", "latest of eval_dataset_zip id")
+pipe.add_parameter("eval_dataset_name", "eval_dataset_zip", "latest of eval_dataset_zip name")
+
+def pre_processing_callback(pipeline, node, param_override) -> bool:
+    print("Cloning step4_desc_evalcaption_generation id={}".format(node.base_task_id))    
+    return True
+def post_processing_callback(pipeline, node) -> None:
+    print("Completed step4_desc_evalcaption_generation id={} {}".format(node.base_task_id, node.executed))    
+    return
+
+pipe.add_step(
+    name="eval_desc_generation",
+    parents=["EvalData_Mapping"],
+    base_task_project=project_name,
+    base_task_name="step4_desc_evalcaption_generation",
+    parameter_override={
+        "General/dataset_id": "${EvalData_Mapping.parameters.General/output_dataset_id}",
+        "General/dataset_name": "${pipeline.dataset_name}",
+        "General/eval_dataset_id": "${pipeline.eval_dataset_id}", 
+        "General/eval_dataset_name": "${pipeline.eval_dataset_name}"
+    },
+    pre_execute_callback=pre_processing_callback,
+    post_execute_callback=post_processing_callback
+)
+
 
 """
-STEP 7: Model Evaluation
+STEP 8: Model Evaluation
 """
 """
 def load_eval_config(model_variant) -> dict:
@@ -274,6 +310,7 @@ eval_dataset_id= '',
 eval_dataset_name= 'eval_dataset_zip',
 desc_draft_model_id= '',       # the unpublished model to evaluate 
 desc_pub_model_name= 'student_desc_model'
+batch_size: 16
 
 pipe.add_parameter("eval_dataset_id", "", "Overitten if previous task is not skipped. If set, ignore eval_dataset_name")
 pipe.add_parameter("eval_dataset_name", "eval_dataset_zip", "latest eval image dataset name")
@@ -281,48 +318,50 @@ pipe.add_parameter("dataset_id", "", "latest eval caption dataset name")
 pipe.add_parameter("dataset_name", "Desc_Caption_EvalDataset", "latest eval caption dataset name")
 pipe.add_parameter("desc_draft_model_id", "", "latest trained model in draft state")
 pipe.add_parameter("desc_pub_model_name", "student_desc_model", "latest best model in published state")
+pipe.add_parameter("batch_size", 16, "eval batch size")
 
 def pre_eval_callback(pipeline, node, param_override) -> bool:    
-    print("Cloning step7_desc_model_evaluation id={}".format(node.base_task_id))      # param validation check
+    print("Cloning step8_desc_model_evaluation id={}".format(node.base_task_id))      # param validation check
     return True
 
 def post_eval_callback(pipeline, node) -> None:   
-    print("Completed step7_desc_model_evaluation id={} {}".format(node.base_task_id, node.executed))    
+    print("Completed step8_desc_model_evaluation id={} {}".format(node.base_task_id, node.executed))    
     return
 
 pipe.add_step(
     name="desc_model_evaluation",
-    parents=["eval_desc_generation", "desc_model_training"],
+    parents=["eval_desc_generation", "desc_model_hpo"],
     base_task_project=project_name,
-    base_task_name="step7_desc_model_evaluation",
+    base_task_name="step8_desc_model_evaluation",
     parameter_override={
         "General/dataset_id": "${eval_desc_generation.parameters.General/output_dataset_id}", 
         "General/dataset_name": "${pipeline.dataset_name}",
         "General/eval_dataset_id": "${pipeline.eval_dataset_id}", 
         "General/eval_dataset_name": "${pipeline.eval_dataset_name}",
-        "General/desc_draft_model_id": "${desc_model_training.parameters.General/output_model_id}",
-        "General/pub_model_name": "${pipeline.desc_pub_model_name}"
+        "General/desc_draft_model_id": "${desc_model_hpo.parameters.General/best_model_id}",
+        "General/pub_model_name": "${pipeline.desc_pub_model_name}",
+        "General/batch_size": "${pipeline.batch_size}"
     },
     pre_execute_callback=pre_eval_callback,
     post_execute_callback=post_eval_callback
 )
 
 """
-STEP 8: Model Publishing
+STEP 9: Model Publishing
 """
 def pre_pub_callback(pipeline, node, param_override) -> bool:
-    print("Cloning step8_desc_model_publish id={}".format(node.base_task_id))    
+    print("Cloning step9_desc_model_publish id={}".format(node.base_task_id))    
     return True
 
 def post_pub_callback(pipeline, node) -> None:
-    print("Completed step8_desc_model_publish id={} {}".format(node.base_task_id, node.executed))    
+    print("Completed step9_desc_model_publish id={} {}".format(node.base_task_id, node.executed))    
     return
 
 pipe.add_step(
     name="desc_model_publishing",
     parents=["desc_model_evaluation"],
     base_task_project=project_name,
-    base_task_name="step8_desc_model_publish",
+    base_task_name="step9_desc_model_publish",
     parameter_override={
         "General/desc_draft_model_id": "${desc_model_evaluation.parameters.General/best_model_id}"
     },
