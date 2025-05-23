@@ -220,12 +220,13 @@ pipe.add_step(
 """
 Step 6: Model hyperparameter optimisation
 """
+#1440.0, [10,20], [16, 32], [1e-5, 5e-5, 1e-4], [1e-3, 1e-2]
 # model optimisation settings
-pipe.add_parameter("time_limit_minutes", 1440.0, "Maximum optimization time limit in minutes")
-pipe.add_parameter("num_epochs", [10, 20], "list of epochs")
+pipe.add_parameter("time_limit_minutes", 70, "Maximum optimization time limit in minutes")
+pipe.add_parameter("num_epochs", [1], "list of epochs")
 pipe.add_parameter("batch_size", [16, 32], "list of batch size")
-pipe.add_parameter("lr", [1e-5, 5e-5, 1e-4], "list of learning rate")
-pipe.add_parameter("weight_decay", [1e-3, 1e-2], "weight decay values in list")
+pipe.add_parameter("lr", [1e-4], "list of learning rate")
+pipe.add_parameter("weight_decay", [1e-2], "weight decay values in list")
 
 def pre_hpo_callback(pipeline, node, param_override) -> bool:  
     print("Cloning step7_desc_model_hpo id={}".format(node.base_task_id))    
