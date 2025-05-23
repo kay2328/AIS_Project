@@ -246,11 +246,11 @@ pipe.add_step(
     base_task_name="step7_desc_model_hpo",
     parameter_override={
         "General/base_train_task_id": "${desc_model_training.id}",   
-        "General/time_limit_minutes": "${pipeline.time_limit_minutes}",       
-        "General/num_epochs": "${pipeline.num_epochs}",
-        "General/batch_size": "${pipeline.batch_size}",
-        "General/lr": "${pipeline.lr}",
-        "General/weight_decay": "${pipeline.weight_decay}"
+        "General/time_limit_minutes": pipe.get_parameters()["time_limit_minutes"],       
+        "General/num_epochs": pipe.get_parameters()["num_epochs"],
+        "General/batch_size": pipe.get_parameters()["batch_size"],
+        "General/lr": pipe.get_parameters()["lr"],
+        "General/weight_decay": pipe.get_parameters()["weight_decay"]
     },
     pre_execute_callback=pre_hpo_callback,
     post_execute_callback=post_hpo_callback
