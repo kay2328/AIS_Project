@@ -5,13 +5,18 @@ from torch.utils.data import Dataset
 import json
 import numpy as np
 import os
+import sys
 from PIL import Image
 from transformers import Seq2SeqTrainer
 import evaluate
 from pycocoevalcap.cider.cider import Cider
 #from pycocoevalcap.spice.spice import Spice
 from transformers import VisionEncoderDecoderModel, ViTFeatureExtractor, AutoTokenizer
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../src')))
 from enigmaai import util
+import zipfile
+import tempfile
+from pathlib import Path
 
 """
 Load Model components for training
@@ -148,6 +153,64 @@ class CustomDataCollator:
             "labels":            labels_mask.to(self.device),
             "decoder_input_ids": decoder_input_ids.to(self.device),
         }
+"""
+Model for evaluation
+"""
+class ModelLoader:
+    """
+    Loads a vision-encoder-decoder model from a zipped directory.
+    Usage:
+        loader = ModelLoader(
+            model_zip_path="/path/to/best_model.zip",
+            device=torch.device("cuda"),
+            max_target_len=64,
+            num_beams=4,
+            length_penalty=2.0,
+            early_stopping=False
+        )
+        model, feature_extractor, tokenizer = loader.load()
+    """
+    def __init__(self, model_zip_path: str, device: torch.device = None, max_target_len: int = 64, num_beams: int = 4, length_penalty: float = 2.0, early_stopping: bool = False):
+        self.model_zip_path = Path(model_zip_path)
+        self.device = util.get_device_name()
+        self.max_target_len = max_target_len
+        self.num_beams = num_beams
+        self.length_penalty = length_penalty
+        self.early_stopping = early_stopping
+        self._tmp_dir = Path(tempfile.mkdtemp())
+
+    def load(self):
+        """
+        Unzips the model archive and loads the model, tokenizer, and feature extractor.
+
+        Returns:
+            model: VisionEncoderDecoderModel
+            feature_extractor: ViTFeatureExtractor
+            tokenizer: AutoTokenizer
+        """
+        # Unzip model files
+        with zipfile.ZipFile(self.model_zip_path, 'r') as zf:
+            zf.extractall(self._tmp_dir)
+        # Load pretrained components
+        model = VisionEncoderDecoderModel.from_pretrained(self._tmp_dir)
+        tokenizer = AutoTokenizer.from_pretrained(self._tmp_dir)
+        feature_extractor = ViTFeatureExtractor.from_pretrained(self._tmp_dir)
+
+        # Adjust tokenizer & model config
+        tokenizer.add_special_tokens({"pad_token": "[PAD]"})
+        model.decoder.resize_token_embeddings(len(tokenizer))
+
+        model.config.pad_token_id = tokenizer.pad_token_id
+        model.config.decoder_start_token_id = tokenizer.bos_token_id
+        model.config.eos_token_id = tokenizer.eos_token_id
+        model.config.max_length = self.max_target_len
+        model.config.num_beams = self.num_beams
+        model.config.length_penalty = self.length_penalty
+        model.config.early_stopping = self.early_stopping
+        # Move model to device
+        model.to(self.device)
+        return model, feature_extractor, tokenizer
+
 
 """
 Metrics for evaluation
