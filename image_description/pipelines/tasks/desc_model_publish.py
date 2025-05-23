@@ -17,7 +17,7 @@ task = Task.init(project_name=project_name,
                 task_type=Task.TaskTypes.qc)
 
 params = {
-    'desc_draft_model_id': 'c283efa74de145ef8d4b9491501d4823'      # specific id of the model
+    'desc_draft_model_id': ''      # specific id of the model
 }
 
 task.connect(params)
