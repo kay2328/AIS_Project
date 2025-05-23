@@ -370,7 +370,7 @@ pipe.add_step(
     post_execute_callback=post_pub_callback
 )
 
-remote_execution = project.get("pipeline-remote-execution")
+remote_execution = True #project.get("pipeline-remote-execution")
 if remote_execution:
     print(f"Executing '{pipeline_name}' pipeline remotely")
     pipe.start(queue = "desc_preparation")
