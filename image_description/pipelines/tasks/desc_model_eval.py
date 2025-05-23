@@ -185,11 +185,12 @@ def run_eval(split_name, captions_json, model, feature_extractor, tokenizer):
 Evaluation and comparison between draft and published best model
 """
 # evaluate the draft model   
-loader = ModelLoader() 
-draft_model_hf, draft_feature_extractor, draft_tokenizer = loader.load(draft_model_path)
+loader_draft = ModelLoader(model_zip_path=str(draft_model_path), device=device)
+draft_model_hf, draft_feature_extractor, draft_tokenizer = loader_draft.load()
 draft_metrics = run_eval("Test", test_json, draft_model_hf, draft_feature_extractor, draft_tokenizer)
 # evaluate the published best model
-pub_model_hf, pub_feature_extractor, pub_tokenizer = loader.load(pub_model_path)
+loader_pub = ModelLoader(model_zip_path=str(pub_model_path), device=device)
+pub_model_hf, pub_feature_extractor, pub_tokenizer = loader_pub.load()
 pub_metrics = run_eval("Test", test_json, pub_model_hf, pub_feature_extractor, pub_tokenizer)    
 # show metrics for comparision
 print("keys=", draft_metrics.keys)
