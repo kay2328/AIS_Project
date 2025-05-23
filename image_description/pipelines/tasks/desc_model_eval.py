@@ -54,7 +54,7 @@ img_dataset_id = task.get_parameters()['General/eval_dataset_id']
 img_dataset_name = task.get_parameters()['General/eval_dataset_name']
 draft_model_id = task.get_parameters()['General/desc_draft_model_id']
 pub_model_name = task.get_parameters()['General/desc_pub_model_name']
-batch_size = task.get_parameters()['General/batch_size']
+batch_size = int(task.get_parameters()['General/batch_size'])
 
 # validate task input params
 if not dataset_id and not dataset_name:
