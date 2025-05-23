@@ -34,7 +34,7 @@ task = Task.init(project_name=project_name,
 )
 
 params = {
-    'base_train_task_id': '', 
+    'base_train_task_id': 'a96e7e7fd9734478bff2f76aeacd5d48', 
     'run_as_service': False,
     'time_limit_minutes': 50.0,#1440.0, 
     'test_queue': 'desc_preparation',  
