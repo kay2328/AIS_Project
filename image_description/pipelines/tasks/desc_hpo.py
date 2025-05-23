@@ -18,6 +18,9 @@ subprocess.check_call([sys.executable, "-m", "pip", "install", "tensorboardX"])
 subprocess.check_call([sys.executable, "-m", "pip", "install", "pycocoevalcap"])
 subprocess.check_call([sys.executable, "-m", "pip", "install", "evaluate"])
 
+import os
+os.chdir("/content/AIS_Project/")
+
 # get project configurations
 project = ConfigFactory.get_config(Project.SCENE_DESCRIPTION)
 project_name = project.get('project-name')
