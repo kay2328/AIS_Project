@@ -167,7 +167,7 @@ eval_args = Seq2SeqTrainingArguments(
 # function to run evaluation 
 def run_eval(split_name, captions_json, model, feature_extractor, tokenizer):
     ds = CaptionDataset(captions_json, images_dir, feature_extractor, tokenizer)
-    collator_fn = CustomDataCollator(model, tokenizer, device)
+    collator_fn = CustomDataCollator(model, tokenizer)
     compute_metrics_fn = ComputeMetrics(tokenizer)
     trainer = Seq2SeqTrainer(
         model=model,
