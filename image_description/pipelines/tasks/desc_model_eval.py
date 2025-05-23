@@ -39,7 +39,7 @@ params = {
     'dataset_name': 'Desc_Caption_EvalDataset',              # latest registered dataset
     'eval_dataset_id': '', #'e19da140dd6a479c864dd7bdf930918d',#'2231b5b121924ed684d6560cf6839619',     # specific version of the dataset
     'eval_dataset_name': 'eval_dataset_zip',
-    'desc_draft_model_id': '3f82d183b988465e8709d7919caa2d6f',    # the unpublished model to evaluate 
+    'desc_draft_model_id': '59f9cbd58eee4b4880d1666d1ac912ea',    # the unpublished model to evaluate 
     'desc_pub_model_name': 'student_desc_model',       # the published model name for comparison
     'eval_batch_size': 16
 }
