@@ -43,7 +43,7 @@ params = {
     'dataset_name': 'Desc_Caption_EvalDataset',              # latest registered dataset
     'eval_dataset_id': '', #'e19da140dd6a479c864dd7bdf930918d',#'2231b5b121924ed684d6560cf6839619',     # specific version of the dataset
     'eval_dataset_name': 'eval_dataset_zip',
-    'desc_draft_model_id': '1bb143b453ad418eb5b9c650e79ea5ec',    # the unpublished model to evaluate 
+    'desc_draft_model_id': 'c283efa74de145ef8d4b9491501d4823',    # the unpublished model to evaluate 
     'desc_pub_model_name': 'student_desc_model',       # the published model name for comparison
 }
 task.connect(params)
@@ -216,7 +216,7 @@ else: # new model not better, nothing to publish
 print("best_model_project:", project_name)
 print("best_model_id:", best_model.id)
 print("best_model_name:", best_model.name)
-print("best_model_variant:", best_model.name)
+
 
 # task output info
 task.set_parameter("best_model_project", project_name)
