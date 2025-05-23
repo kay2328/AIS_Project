@@ -51,6 +51,10 @@ logger.info(f"model_HPO params={task_params}")
 
 base_task_id = task_params['General/base_train_task_id']
 
+num_epochs   = ast.literal_eval(task_params['General/num_epochs'])   # [10, 20]
+batch_size  = ast.literal_eval(task_params['General/batch_size'])  # [16, 32]
+lr          = ast.literal_eval(task_params['General/lr'])         # [1e-5, 5e-5, 1e-4]
+weight_decay         = ast.literal_eval(task_params['General/weight_decay'])
 # Exit if not base task
 if not base_task_id:
     task.mark_completed(status_message="No base train task ID provided. Nothing to optimisation from.")
@@ -60,10 +64,10 @@ if not base_task_id:
 hpo_task = HyperParameterOptimizer(
     base_task_id=base_task_id,
     hyper_parameters=[
-        DiscreteParameterRange('General/num_epochs', values=ast.literal_eval(task_params['General/num_epochs'])),
-        DiscreteParameterRange('General/batch_size', values=ast.literal_eval(task_params['General/batch_size'])), 
-        DiscreteParameterRange('General/lr', values=ast.literal_eval(task_params['General/lr'])),  
-        DiscreteParameterRange('General/weight_decay', values=ast.literal_eval(task_params['General/weight_decay']))],
+        DiscreteParameterRange('General/num_epochs', values=num_epochs),
+        DiscreteParameterRange('General/batch_size', values=batch_size), 
+        DiscreteParameterRange('General/lr', values=lr),  
+        DiscreteParameterRange('General/weight_decay', values=weight_decay)],
     objective_metric_title='validation',
     objective_metric_series='cider',
     objective_metric_sign='max',
