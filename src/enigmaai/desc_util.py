@@ -17,7 +17,11 @@ from enigmaai import util
 import zipfile
 import tempfile
 from pathlib import Path
-
+import subprocess
+# Install absl-py on the fly so evaluate.load("rouge") can import it
+subprocess.check_call([sys.executable, "-m", "pip", "install", "evaluate"])
+subprocess.check_call([sys.executable, "-m", "pip", "install", "pycocoevalcap"])
+subprocess.check_call([sys.executable, "-m", "pip", "install", "tensorboardX"])
 """
 Load Model components for training
 """
