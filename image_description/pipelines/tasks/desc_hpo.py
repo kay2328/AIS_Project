@@ -33,14 +33,14 @@ task = Task.init(project_name=project_name,
 )
 
 params = {
-    'base_train_task_id': 'e75ef1f7bfb14622a218b1e7f09ae08e', 
+    'base_train_task_id': 'a96e7e7fd9734478bff2f76aeacd5d48', 
     'run_as_service': False,
-    'time_limit_minutes': 1440.0, 
+    'time_limit_minutes': 50.0,#1440.0, 
     'test_queue': 'desc_preparation',  
-    'num_epochs': [10, 20], 
+    'num_epochs': [1],#[10, 20], 
     'batch_size': [16, 32],
-    'lr': [1e-5, 5e-5, 1e-4],
-    'weight_decay': [1e-3, 1e-2]  # Default weight decay
+    'lr': [1e-4],#[1e-5, 5e-5, 1e-4],
+    'weight_decay': [1e-2], #[1e-3, 1e-2]  # Default weight decay
 }
 
 params = task.connect(params)
