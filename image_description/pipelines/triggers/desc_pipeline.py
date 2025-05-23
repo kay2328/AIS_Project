@@ -141,7 +141,7 @@ STEP 4: Splitting Train Dataset
 cap_dataset_id= ''
 cap_dataset_name= 'Desc_Caption_BaseDataset'
 random_state= 42
-val_size=0.2
+val_size=0.15
 pipe.add_parameter("cap_dataset_id", "", "(Optional) Overitten if previous task is not skipped. If empty, use the latest of base caption dataset id")
 pipe.add_parameter("cap_dataset_name", "Desc_Caption_BaseDataset", "latest of base caption dataset_name")
 pipe.add_parameter("random_state", 42, "Specify random state for consistent training")

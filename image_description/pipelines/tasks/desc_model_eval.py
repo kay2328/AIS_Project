@@ -133,9 +133,9 @@ if not pub_model_name:
 
 # fetch the draft model path for evaluation    
 draft_model = Model(model_id=draft_model_id)    
-print(f"Found draft model name:{draft_model.name} id:{draft_model.id}")
+print(f"Found draft model id:{draft_model.id}")
 draft_model_path = draft_model.get_local_copy(raise_on_error=True)
-print(f"Downloaded draft model name: {draft_model.name} id:{draft_model.id} to: {draft_model_path}")
+print(f"Downloaded draft model id:{draft_model.id} to: {draft_model_path}")
   
 # fetch the published best model path
 server_models = Model.query_models(model_name=pub_model_name, only_published=True)
