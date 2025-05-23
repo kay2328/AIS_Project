@@ -222,6 +222,7 @@ Step 6: Model hyperparameter optimisation
 """
 #1440.0, [10,20], [16, 32], [1e-5, 5e-5, 1e-4], [1e-3, 1e-2]
 # model optimisation settings
+pipe.add_parameter("base_train_task_id", "", "base train task")
 pipe.add_parameter("time_limit_minutes", 1440.0, "Maximum optimization time limit in minutes")
 pipe.add_parameter("num_epochs", [10,20], "list of epochs")
 pipe.add_parameter("batch_size", [16, 32], "list of batch size")
@@ -244,7 +245,7 @@ pipe.add_step(
     base_task_project=project_name,
     base_task_name="step7_desc_model_hpo",
     parameter_override={
-        "General/base_task_id": "${desc_model_training.id}",   
+        "General/base_train_task_id": "${desc_model_training.id}",   
         "General/time_limit_minutes": "${pipeline.time_limit_minutes}",       
         "General/num_epochs": "${pipeline.num_epochs}",
         "General/batch_size": "${pipeline.batch_size}",
