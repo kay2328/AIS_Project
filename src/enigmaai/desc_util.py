@@ -17,6 +17,8 @@ from enigmaai import util
 import zipfile
 import tempfile
 from pathlib import Path
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 """
 Load Model components for training

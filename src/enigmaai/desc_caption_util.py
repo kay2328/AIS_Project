@@ -4,6 +4,8 @@ import os
 import json
 from transformers import AutoProcessor,LlavaForConditionalGeneration, AutoTokenizer
 import logging
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 def load_model_and_processor(model_name, device):
     logging.info(f"Loading LLAVA teacher '{model_name}' on {device}")
