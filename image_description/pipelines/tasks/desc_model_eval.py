@@ -40,7 +40,7 @@ params = {
     'eval_dataset_id': '', #'e19da140dd6a479c864dd7bdf930918d',#'2231b5b121924ed684d6560cf6839619',     # specific version of the dataset
     'eval_dataset_name': 'eval_dataset_zip',
     'desc_draft_model_id': '16300e71ad9946eabe57f020d8b8d610',    # the unpublished model to evaluate 
-    'desc_pub_model_name': 'student_desc_model',       # the published model name for comparison
+    'desc_pub_model_name': 'student_desc_models',       # the published model name for comparison
     'eval_batch_size': 16
 }
 task.connect(params)
