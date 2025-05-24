@@ -35,7 +35,7 @@ task = Task.init(project_name=project_name,
 )
 
 params = {
-    'base_train_task_id': 'a96e7e7fd9734478bff2f76aeacd5d48', 
+    'base_train_task_id': '', 
     'run_as_service': False,
     'time_limit_minutes': 1440.0, 
     'test_queue': 'desc_preparation',  
@@ -63,7 +63,7 @@ if not base_task_id:
 
 # Create the HPO task
 hpo_task = HyperParameterOptimizer(
-    base_task_id=base_task_id,
+    base_task_id=task_params['General/base_train_task_id'],
     hyper_parameters=[
         DiscreteParameterRange('General/num_epochs', values=num_epochs),
         DiscreteParameterRange('General/batch_size', values=batch_size), 
