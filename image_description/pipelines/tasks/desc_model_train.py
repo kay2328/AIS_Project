@@ -47,8 +47,8 @@ params = {
     'base_dataset_id': '',     # specific version of the dataset
     'base_dataset_name': 'base_dataset_zip',
     'batch_size': 16,
-    'num_epochs': 40,
-    'lr': 2.5e-5,
+    'num_epochs': 50,
+    'lr': 4.5e-5,
     'weight_decay': 0.001
 }
 task.connect(params)
