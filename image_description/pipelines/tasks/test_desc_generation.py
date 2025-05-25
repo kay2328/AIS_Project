@@ -52,7 +52,7 @@ params = {
     'dataset_id': '',                # specific version of the dataset
     'dataset_name': 'Desc_Eval_Dataset',              # latest registered dataset
     'eval_dataset_id': '',    # specific version of the dataset
-    'eval_dataset_name': 'eval_dataset_zip'        #need to change here
+    'eval_dataset_name': 'eval_dataset_zip'        
 }
 
 logger = task.get_logger()
@@ -74,13 +74,13 @@ if not img_dataset_id and not img_dataset_name:
 """
 Fetch images data to generate descriptions for evaluation
 """
-# get the image dataset from "Detection project - eval_dataset_zip"  #need to change here
+# get the image dataset from "Detection project - eval_dataset_zip"  
 try: 
     # download the latest registered dataset
     server_dataset = Dataset.get(dataset_id=img_dataset_id, only_completed=True, alias="base_dataset")
 except ValueError:
     # download the latest registered dataset
-    server_dataset = Dataset.get(dataset_name=img_dataset_name, dataset_project="Detection", only_completed=True, alias="base_dataset") #need to change here
+    server_dataset = Dataset.get(dataset_name=img_dataset_name, dataset_project="Detection", only_completed=True, alias="base_dataset") 
 extract_path = server_dataset.get_local_copy()          
 print(f"Downloaded base dataset name: {server_dataset.name} id: ({server_dataset.id}) to: {extract_path}")
 

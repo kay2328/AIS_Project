@@ -51,11 +51,11 @@ pipe = PipelineController(name=pipeline_name,
 pipe.set_default_execution_queue("desc_preparation")
 #pipe._task.set_script(working_dir="/content/AIS_Project/image_description")
 """ 
-STEP 1: Create Image-Label Mapping dataset from Base dataset under Detection Project    #need to change here
+STEP 1: Create Image-Label Mapping dataset from Base dataset under Detection Project    
 """
 # intial dataset to download. If none provided, task will complete without upload
 base_dataset_id = ""
-base_dataset_name = "base_dataset_zip"      #need to change here
+base_dataset_name = "base_dataset_zip"      
 
 pipe.add_parameter("base_dataset_id", base_dataset_id, "latest of base_dataset_zip id")
 pipe.add_parameter("base_dataset_name", base_dataset_name, "latest of base_dataset_zip name")
@@ -77,10 +77,10 @@ pipe.add_step(
     post_execute_callback=post_base_dataprep_callback
 )
 """ 
-STEP 2: Create Image-Label Mapping dataset from Eval dataset under Detection Project  #need to change here
+STEP 2: Create Image-Label Mapping dataset from Eval dataset under Detection Project  
 """
 eval_dataset_id = ""
-eval_dataset_name = "eval_dataset_zip"   #need to change here
+eval_dataset_name = "eval_dataset_zip"   
 
 pipe.add_parameter("eval_dataset_id", "", "latest of eval_dataset_zip id")
 pipe.add_parameter("eval_dataset_name", "eval_dataset_zip", "latest of eval_dataset_zip name")
@@ -110,7 +110,7 @@ STEP 3: Train Data Reference description generation
 dataset_id = ""
 dataset_name = "Desc_Base_Dataset"
 base_dataset_id = ''
-base_dataset_name = "base_dataset_zip"   #need to change here
+base_dataset_name = "base_dataset_zip"  
 
 pipe.add_parameter("dataset_id", dataset_id, "latest id of base data img-label mapping")
 pipe.add_parameter("dataset_name", dataset_name, "latest of base data img-label name")
@@ -193,13 +193,13 @@ def load_hyp_config(model_variant) -> dict:
 split_dataset_id= '',               
 split_dataset_name ='Desc_Split_dataset'            
 base_dataset_id = ''
-base_dataset_name = 'base_dataset_zip'     #need to change here
+base_dataset_name = 'base_dataset_zip'     
 
 # model training settings
 pipe.add_parameter("split_dataset_id", "", "(Optional) Overitten if previous task is not skipped. If set, ignore split_dataset_name")
 pipe.add_parameter("split_dataset_name", "Desc_Split_dataset", "split data name")
 pipe.add_parameter("base_dataset_id", "", "latest of base_dataset_zip id")
-pipe.add_parameter("base_dataset_name", "base_dataset_zip", "latest of base_dataset_zip name")   #need to change here
+pipe.add_parameter("base_dataset_name", "base_dataset_zip", "latest of base_dataset_zip name")   
 
 def pre_training_callback(pipeline, node, param_override) -> bool:  
     print("Cloning step6_desc_model_training id={}".format(node.base_task_id))    
@@ -267,7 +267,7 @@ STEP 7: Test Data Reference description generation
 dataset_id = ""
 dataset_name = "Desc_Eval_Dataset"
 eval_dataset_id = ''
-eval_dataset_name = "eval_dataset_zip" #need to change here
+eval_dataset_name = "eval_dataset_zip" 
 
 pipe.add_parameter("dataset_id", "", "latest id of eval data img-label mapping from step 2")
 pipe.add_parameter("dataset_name", "Desc_Eval_Dataset", "latest of eval data img-label name from step 2")
@@ -314,13 +314,13 @@ def load_eval_config(model_variant) -> dict:
 dataset_id= '',              
 dataset_name= 'Desc_Caption_EvalDataset ',              # latest registered dataset
 eval_dataset_id= '',
-eval_dataset_name= 'eval_dataset_zip',                  #need to change here
+eval_dataset_name= 'eval_dataset_zip',                  
 desc_draft_model_id= '',       # the unpublished model to evaluate 
 desc_pub_model_name= 'student_desc_model'
 eval_batch_size= 16
 
 pipe.add_parameter("eval_dataset_id", "", "Overitten if previous task is not skipped. If set, ignore eval_dataset_name")
-pipe.add_parameter("eval_dataset_name", "eval_dataset_zip", "latest eval image dataset name")      #need to change here
+pipe.add_parameter("eval_dataset_name", "eval_dataset_zip", "latest eval image dataset name")      
 pipe.add_parameter("dataset_id", "", "latest eval caption dataset name")
 pipe.add_parameter("dataset_name", "Desc_Caption_EvalDataset", "latest eval caption dataset name")
 pipe.add_parameter("desc_draft_model_id", "", "latest trained model in draft state")

@@ -44,7 +44,7 @@ params = {
     'split_dataset_id': '',                # specific version of the dataset
     'split_dataset_name': 'Desc_Split_dataset',              # latest registered dataset
     'base_dataset_id': '',     # specific version of the dataset
-    'base_dataset_name': 'base_dataset_zip',                                                #need to change here
+    'base_dataset_name': 'base_dataset_zip',                                                
     'batch_size': 16,
     'num_epochs': 1,
     'lr': 5e-5,
@@ -96,13 +96,13 @@ if not train_json.exists() or not val_json.exists():
 """
 Fetching image dataset for training
 """
-# 3. Fetch images ZIP from "base_dataset_zip" under "Detection" project    #need to change here
+# 3. Fetch images ZIP from "base_dataset_zip" under "Detection" project    
 try: 
     # download the latest registered dataset
     server_dataset = Dataset.get(dataset_id=img_dataset_id, only_completed=True, alias="base_dataset")
 except ValueError:
     # download the latest registered dataset
-    server_dataset = Dataset.get(dataset_name=img_dataset_name, dataset_project="Detection", only_completed=True, alias="base_dataset")   #need to change here
+    server_dataset = Dataset.get(dataset_name=img_dataset_name, dataset_project="Detection", only_completed=True, alias="base_dataset")   
 extract_path = server_dataset.get_local_copy()          
 print(f"Downloaded base dataset name: {server_dataset.name} id: ({server_dataset.id}) to: {extract_path}")
 

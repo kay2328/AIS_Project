@@ -40,7 +40,7 @@ params = {
     'eval_dataset_id': '',  # specific version of the dataset
     'eval_dataset_name': 'eval_dataset_zip',
     'desc_draft_model_id': '',    # the unpublished model to evaluate 
-    'desc_pub_model_name': 'student_desc_models',       # the published model name for comparison
+    'desc_pub_model_name': 'student_desc_model',       # the published model name for comparison
     'eval_batch_size': 16
 }
 task.connect(params)
@@ -83,12 +83,12 @@ logging.info(f"Split JSONs located at: {eval_cap_path}")
 """
 Fetching image dataset for evaluation
 """
-# Fetch images ZIP from "eval_dataset_zip" under "Detection" project #need to change here
+# Fetch images ZIP from "eval_dataset_zip" under "Detection" project 
 try: 
     # download the latest registered dataset
     server_dataset = Dataset.get(dataset_id=img_dataset_id, only_completed=True, alias="eval_img_dataset")
 except ValueError:
-    server_dataset = Dataset.get(dataset_name=img_dataset_name, dataset_project="Detection", only_completed=True, alias="eval_img_dataset") #need to change here
+    server_dataset = Dataset.get(dataset_name=img_dataset_name, dataset_project="Detection", only_completed=True, alias="eval_img_dataset")
 extract_path = server_dataset.get_local_copy()          
 print(f"Downloaded eval image dataset name: {server_dataset.name} id: ({server_dataset.id}) to: {extract_path}")
 

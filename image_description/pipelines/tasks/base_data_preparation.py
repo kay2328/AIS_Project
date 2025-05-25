@@ -30,7 +30,7 @@ task = Task.init(project_name=project_name,
                 task_type=Task.TaskTypes.data_processing)
 params = {
     'base_dataset_id': '',     # specific version of the dataset
-    'base_dataset_name': 'base_dataset_zip',    # latest registered dataset      #need to change here
+    'base_dataset_name': 'base_dataset_zip',    # latest registered dataset      
 }
 
 logger = task.get_logger()
@@ -48,7 +48,7 @@ if dataset_id:
     server_dataset = Dataset.get(dataset_id=dataset_id, only_completed=True, alias="base_dataset")
 elif dataset_name: 
     # download the latest registered dataset
-    server_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="Detection", only_completed=True, alias="base_dataset") #need to change here
+    server_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="Detection", only_completed=True, alias="base_dataset") 
 
 extract_path = server_dataset.get_local_copy()          
 print(f"Downloaded base dataset name: {server_dataset.name} id: ({server_dataset.id}) to: {extract_path}")
