@@ -48,8 +48,8 @@ params = {
     'base_dataset_name': 'base_dataset_zip',
     'batch_size': 16,
     'num_epochs': 50,
-    'lr': 4.5e-5,
-    'weight_decay': 0.001
+    'lr': 5e-5,
+    'weight_decay': 0.01
 }
 task.connect(params)
 task.execute_remotely(queue_name="desc_preparation")
