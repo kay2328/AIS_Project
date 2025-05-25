@@ -42,13 +42,13 @@ os.chdir("/content/AIS_Project/")
 # get project configurations
 project = ConfigFactory.get_config(Project.SCENE_DESCRIPTION)
 project_name = project.get('project-name')
-pipeline_name = "VLMPipeline"
+pipeline_name = "VLM Pipeline"
 
 # Connecting ClearML with the current pipeline, from here on everything is logged automatically
 pipe = PipelineController(name=pipeline_name, 
                           project=project_name, 
                           add_pipeline_tags=False)
-pipe.set_default_execution_queue("desc_preparation")
+pipe.set_default_execution_queue(project.get('queue-gpu'))
 #pipe._task.set_script(working_dir="/content/AIS_Project/image_description")
 """ 
 STEP 1: Create Image-Label Mapping dataset from Base dataset under Detection Project    
