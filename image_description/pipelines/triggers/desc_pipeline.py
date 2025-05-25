@@ -32,6 +32,7 @@ Depending on which pipeline parameters supplied, it can skip any of the first th
 All steps log their task IDs and parameters to the console, so you can trace exactly how each subtask was cloned
 and run. Simply override the pipeline parameters at launch time to adjust behavior, queues, or hyperparameter ranges.
 """
+
 import sys
 import os
 from clearml.automation import PipelineController
@@ -49,13 +50,12 @@ pipe = PipelineController(name=pipeline_name,
                           project=project_name, 
                           add_pipeline_tags=False)
 pipe.set_default_execution_queue(project.get('queue-gpu'))
-#pipe._task.set_script(working_dir="/content/AIS_Project/image_description")
 """ 
-STEP 1: Create Image-Label Mapping dataset from Base dataset under Detection Project    
+STEP 1: Create Image-Label Mapping dataset from Base dataset under Detection Project
 """
 # intial dataset to download. If none provided, task will complete without upload
 base_dataset_id = ""
-base_dataset_name = "base_dataset_zip"      
+base_dataset_name = "base_dataset_zip"
 
 pipe.add_parameter("base_dataset_id", base_dataset_id, "latest of base_dataset_zip id")
 pipe.add_parameter("base_dataset_name", base_dataset_name, "latest of base_dataset_zip name")
@@ -77,10 +77,10 @@ pipe.add_step(
     post_execute_callback=post_base_dataprep_callback
 )
 """ 
-STEP 2: Create Image-Label Mapping dataset from Eval dataset under Detection Project  
+STEP 2: Create Image-Label Mapping dataset from Eval dataset under Detection Project
 """
 eval_dataset_id = ""
-eval_dataset_name = "eval_dataset_zip"   
+eval_dataset_name = "eval_dataset_zip"
 
 pipe.add_parameter("eval_dataset_id", "", "latest of eval_dataset_zip id")
 pipe.add_parameter("eval_dataset_name", "eval_dataset_zip", "latest of eval_dataset_zip name")
@@ -110,7 +110,7 @@ STEP 3: Train Data Reference description generation
 dataset_id = ""
 dataset_name = "Desc_Base_Dataset"
 base_dataset_id = ''
-base_dataset_name = "base_dataset_zip"  
+base_dataset_name = "base_dataset_zip"
 
 pipe.add_parameter("dataset_id", dataset_id, "latest id of base data img-label mapping")
 pipe.add_parameter("dataset_name", dataset_name, "latest of base data img-label name")
@@ -180,26 +180,16 @@ pipe.add_step(
 """ 
 STEP 5: Student Model training
 """
-""" 
-def load_hyp_config(model_variant) -> dict:
-    hyp_config_file = f"{model_variant}_hyp_config.yaml"
-    hyp_config_path = Path(__file__).parent / hyp_config_file
-    print("hyp_config_path=", hyp_config_path.resolve())
-    if hyp_config_path.exists():    
-        with open(hyp_config_path, "r") as file:
-            hyperparameters = yaml.safe_load(file)
-    return hyperparameters
-"""
 split_dataset_id= '',               
 split_dataset_name ='Desc_Split_dataset'            
 base_dataset_id = ''
-base_dataset_name = 'base_dataset_zip'     
+base_dataset_name = 'base_dataset_zip'
 
 # model training settings
 pipe.add_parameter("split_dataset_id", "", "(Optional) Overitten if previous task is not skipped. If set, ignore split_dataset_name")
 pipe.add_parameter("split_dataset_name", "Desc_Split_dataset", "split data name")
 pipe.add_parameter("base_dataset_id", "", "latest of base_dataset_zip id")
-pipe.add_parameter("base_dataset_name", "base_dataset_zip", "latest of base_dataset_zip name")   
+pipe.add_parameter("base_dataset_name", "base_dataset_zip", "latest of base_dataset_zip name")
 
 def pre_training_callback(pipeline, node, param_override) -> bool:  
     print("Cloning step6_desc_model_training id={}".format(node.base_task_id))    
@@ -225,11 +215,10 @@ pipe.add_step(
 """
 Step 6: Model hyperparameter optimisation
 """
-#1440.0, [10,20], [16, 32], [1e-5, 5e-5, 1e-4], [1e-3, 1e-2]
 # model optimisation settings
 pipe.add_parameter("base_train_task_id", "", "base train task")
 pipe.add_parameter("time_limit_minutes", 60.0, "Maximum optimization time limit in minutes")
-pipe.add_parameter("num_epochs", [2,3], "list of epochs")
+pipe.add_parameter("num_epochs", [2, 3], "list of epochs")
 pipe.add_parameter("batch_size", [16, 32], "list of batch size")
 pipe.add_parameter("lr", [1e-5, 5e-5, 1e-4], "list of learning rate")
 pipe.add_parameter("weight_decay", [1e-3,1e-2], "weight decay values in list")
@@ -267,7 +256,7 @@ STEP 7: Test Data Reference description generation
 dataset_id = ""
 dataset_name = "Desc_Eval_Dataset"
 eval_dataset_id = ''
-eval_dataset_name = "eval_dataset_zip" 
+eval_dataset_name = "eval_dataset_zip"
 
 pipe.add_parameter("dataset_id", "", "latest id of eval data img-label mapping from step 2")
 pipe.add_parameter("dataset_name", "Desc_Eval_Dataset", "latest of eval data img-label name from step 2")
@@ -300,27 +289,16 @@ pipe.add_step(
 """
 STEP 8: Model Evaluation
 """
-"""
-def load_eval_config(model_variant) -> dict:
-    eval_config_file = f"{model_variant}_eval_config.yaml"
-    eval_config_path = Path(__file__).parent / eval_config_file
-    print("eval_config_path=", eval_config_path.resolve())
-    if eval_config_path.exists():    
-        with open(eval_config_path, "r") as file:
-            eval_confg = yaml.safe_load(file)
-    
-    return eval_confg
-"""
 dataset_id= '',              
-dataset_name= 'Desc_Caption_EvalDataset ',              # latest registered dataset
+dataset_name= 'Desc_Caption_EvalDataset ',     # latest registered dataset
 eval_dataset_id= '',
-eval_dataset_name= 'eval_dataset_zip',                  
+eval_dataset_name= 'eval_dataset_zip',
 desc_draft_model_id= '',       # the unpublished model to evaluate 
 desc_pub_model_name= 'student_desc_model'
 eval_batch_size= 16
 
 pipe.add_parameter("eval_dataset_id", "", "Overitten if previous task is not skipped. If set, ignore eval_dataset_name")
-pipe.add_parameter("eval_dataset_name", "eval_dataset_zip", "latest eval image dataset name")      
+pipe.add_parameter("eval_dataset_name", "eval_dataset_zip", "latest eval image dataset name")
 pipe.add_parameter("dataset_id", "", "latest eval caption dataset name")
 pipe.add_parameter("dataset_name", "Desc_Caption_EvalDataset", "latest eval caption dataset name")
 pipe.add_parameter("desc_draft_model_id", "", "latest trained model in draft state")
