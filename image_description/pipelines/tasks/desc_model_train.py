@@ -4,7 +4,7 @@ import logging
 import zipfile
 from pathlib import Path
 import torch
-from transformers import (VisionEncoderDecoderModel,ViTFeatureExtractor,AutoTokenizer,Seq2SeqTrainingArguments)
+from transformers import (VisionEncoderDecoderModel,Seq2SeqTrainingArguments)
 # Force a non-interactive backend
 os.environ['MPLBACKEND'] = 'agg'
 import matplotlib.pyplot as plt
@@ -12,7 +12,6 @@ import torch
 import sys
 import tempfile
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../src')))
-#sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 from enigmaai.config import Project, ConfigFactory
 from enigmaai.desc_util import CaptionDataset, ComputeMetrics, CustomDataCollator, CleanSeq2SeqTrainer, StudentModelLoader
 from enigmaai.desc_prep_util import find_dir_with_files
@@ -45,14 +44,14 @@ params = {
     'split_dataset_id': '',                # specific version of the dataset
     'split_dataset_name': 'Desc_Split_dataset',              # latest registered dataset
     'base_dataset_id': '',     # specific version of the dataset
-    'base_dataset_name': 'base_dataset_zip',
+    'base_dataset_name': 'base_dataset_zip',                                                #need to change here
     'batch_size': 16,
-    'num_epochs': 20,
+    'num_epochs': 1,
     'lr': 5e-5,
     'weight_decay': 0.001
 }
 task.connect(params)
-task.execute_remotely(queue_name="desc_preparation")
+task.execute_remotely(queue_name=project.get('queue-gpu'))
 
 dataset_id = task.get_parameters()['General/split_dataset_id']
 dataset_name = task.get_parameters()['General/split_dataset_name']
@@ -97,13 +96,13 @@ if not train_json.exists() or not val_json.exists():
 """
 Fetching image dataset for training
 """
-# 3. Fetch images ZIP from "base_dataset_zip" under "Detection" project
+# 3. Fetch images ZIP from "base_dataset_zip" under "Detection" project    #need to change here
 try: 
     # download the latest registered dataset
     server_dataset = Dataset.get(dataset_id=img_dataset_id, only_completed=True, alias="base_dataset")
 except ValueError:
     # download the latest registered dataset
-    server_dataset = Dataset.get(dataset_name=img_dataset_name, dataset_project="Detection", only_completed=True, alias="base_dataset")
+    server_dataset = Dataset.get(dataset_name=img_dataset_name, dataset_project="Detection", only_completed=True, alias="base_dataset")   #need to change here
 extract_path = server_dataset.get_local_copy()          
 print(f"Downloaded base dataset name: {server_dataset.name} id: ({server_dataset.id}) to: {extract_path}")
 

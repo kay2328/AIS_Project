@@ -1,4 +1,4 @@
-project-name: Description
+project-name: Description_release
 
 # default queue for CPU tasks
 queue-default: "desc_preparation"

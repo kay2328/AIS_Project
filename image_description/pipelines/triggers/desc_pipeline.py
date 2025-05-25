@@ -1,37 +1,42 @@
+"""
+VLMPipeline: end-to-end vision‐language MLOps orchestration using ClearML
+
+This pipeline orchestrates the full life cycle of a vision‐language (VLM) image‐captioning model, providing flexible
+entry points so you can run only the steps you need:
+1. **BaseData_Mapping** (step1)  
+   Download or reuse an object‐detection dataset (images + annotations) and convert it into an image→label JSON mapping.
+2. **EvalData_Mapping** (step2)  
+   Same as BaseData_Mapping, but for your evaluation images.
+3. **Base Caption Generation** (step3)  
+   Use a “teacher” model to generate pseudo‐captions for each training image (knowledge distillation setup).
+4. **Train/Val Split** (step5)  
+   Split the pseudo‐captioned dataset into train/validation JSONs and upload as a new ClearML dataset.
+5. **Student Model Training** (step6)  
+   Train your VisionEncoderDecoder student model on the split dataset, logging metrics (e.g., CIDEr) to ClearML.
+6. **Hyperparameter Optimization** (step7)  
+   Run a grid search over `num_epochs`, `batch_size`, `lr`, and `weight_decay` (within a time limit). Save only top trials.
+7. **Eval Caption Generation** (step4)  
+   With the best student model, generate captions on the evaluation images.
+8. **Model Evaluation** (step8)  
+   Compare generated vs. ground‐truth eval captions (CIDEr, BLEU, ROUGE) and choose the stronger model.
+9. **Model Publishing** (step9)  
+   Publish the winning model to ClearML for reuse in downstream applications.
+
+### Flexible Execution Modes
+Depending on which pipeline parameters supplied, it can skip any of the first three steps and pick up later:
+- **Full run**: steps 1→9 
+- **Skip raw download**: start at step 2  
+- **Skip prep + labeling**: start at step 3  
+- **Skip prep + training**: start at step 4 (directly evaluate an existing model)
+> **Note:** Model evaluation (step 8) cannot be skipped it would auto‐publish whatever draft model provided.
+All steps log their task IDs and parameters to the console, so you can trace exactly how each subtask was cloned
+and run. Simply override the pipeline parameters at launch time to adjust behavior, queues, or hyperparameter ranges.
+"""
 import sys
 import os
-from pathlib import Path
-import yaml
 from clearml.automation import PipelineController
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../src')))
 from enigmaai.config import Project, ConfigFactory
-
-"""
-VLM model end-to-end MLOps pipeline. The pipeline is designed to cater for flexibilities of different needs at 
-different point of the pipeline. 
-
-Sometimes user may want to execute a task for specific purposes and then continue with the pipeline. Some steps can 
-be skipped if the minimum parameters are not provided as specified in the pipeline parameter descriptions (refer to 
-the corresponding tasks for more info).
-
-Pipeline parameter settings can be set in each new run for various purposes as follow:
-
-1. End-to-end from downloading base dataset from remote URL to model publising.
-2. Skip step 1 URL download, use existing base datatset, and start from step 2: dataset processing
-3. Skip steps 1 & 2, use processed dataset and start from step 3: model training
-4. Skip steps 1, 2, & 3, use existing model as the new model for evaluation, starts from step 4: model evaluation
-
-The above scenarios are designed to reduce execution time, resources requirements, duplications, and allows adjustment 
-to various circumstances. Note that you can not skip model evaluation - this leads to publishing the model. If this is 
-not a desire behaviour, use the task Model Evaluation from the WebUI instead of the pipeline.
-
-IMPORTANT: by default, it will use the base_dataset and eval_dataset existing on the server, presuming they are already 
-uploaded. If those datasets are not uploaded, please put in the base_dataset_url and/or eval_dataset_url accordingly.
-Alternatively, before running the pipeline with default settings, upload the dataset using the following tasks from
-the ClearML WebUI:
-
-"""
-import os
 os.chdir("/content/AIS_Project/")
 
 # get project configurations
@@ -46,11 +51,11 @@ pipe = PipelineController(name=pipeline_name,
 pipe.set_default_execution_queue("desc_preparation")
 #pipe._task.set_script(working_dir="/content/AIS_Project/image_description")
 """ 
-STEP 1: Create Image-Label Mapping dataset from Base dataset under Detection Project
+STEP 1: Create Image-Label Mapping dataset from Base dataset under Detection Project    #need to change here
 """
 # intial dataset to download. If none provided, task will complete without upload
-base_dataset_id = "26083b24ab0c47219a5e4f3fe026b085"
-base_dataset_name = "base_dataset_zip"
+base_dataset_id = ""
+base_dataset_name = "base_dataset_zip"      #need to change here
 
 pipe.add_parameter("base_dataset_id", base_dataset_id, "latest of base_dataset_zip id")
 pipe.add_parameter("base_dataset_name", base_dataset_name, "latest of base_dataset_zip name")
@@ -72,10 +77,10 @@ pipe.add_step(
     post_execute_callback=post_base_dataprep_callback
 )
 """ 
-STEP 2: Create Image-Label Mapping dataset from Eval dataset under Detection Project
+STEP 2: Create Image-Label Mapping dataset from Eval dataset under Detection Project  #need to change here
 """
 eval_dataset_id = ""
-eval_dataset_name = "eval_dataset_zip"
+eval_dataset_name = "eval_dataset_zip"   #need to change here
 
 pipe.add_parameter("eval_dataset_id", "", "latest of eval_dataset_zip id")
 pipe.add_parameter("eval_dataset_name", "eval_dataset_zip", "latest of eval_dataset_zip name")
@@ -104,8 +109,8 @@ STEP 3: Train Data Reference description generation
 """
 dataset_id = ""
 dataset_name = "Desc_Base_Dataset"
-base_dataset_id = '26083b24ab0c47219a5e4f3fe026b085'
-base_dataset_name = "base_dataset_zip"
+base_dataset_id = ''
+base_dataset_name = "base_dataset_zip"   #need to change here
 
 pipe.add_parameter("dataset_id", dataset_id, "latest id of base data img-label mapping")
 pipe.add_parameter("dataset_name", dataset_name, "latest of base data img-label name")
@@ -187,14 +192,14 @@ def load_hyp_config(model_variant) -> dict:
 """
 split_dataset_id= '',               
 split_dataset_name ='Desc_Split_dataset'            
-base_dataset_id = '26083b24ab0c47219a5e4f3fe026b085'
-base_dataset_name = 'base_dataset_zip'
+base_dataset_id = ''
+base_dataset_name = 'base_dataset_zip'     #need to change here
 
 # model training settings
 pipe.add_parameter("split_dataset_id", "", "(Optional) Overitten if previous task is not skipped. If set, ignore split_dataset_name")
 pipe.add_parameter("split_dataset_name", "Desc_Split_dataset", "split data name")
-pipe.add_parameter("base_dataset_id", "26083b24ab0c47219a5e4f3fe026b085", "latest of base_dataset_zip id")
-pipe.add_parameter("base_dataset_name", "base_dataset_zip", "latest of base_dataset_zip name")
+pipe.add_parameter("base_dataset_id", "", "latest of base_dataset_zip id")
+pipe.add_parameter("base_dataset_name", "base_dataset_zip", "latest of base_dataset_zip name")   #need to change here
 
 def pre_training_callback(pipeline, node, param_override) -> bool:  
     print("Cloning step6_desc_model_training id={}".format(node.base_task_id))    
@@ -223,8 +228,8 @@ Step 6: Model hyperparameter optimisation
 #1440.0, [10,20], [16, 32], [1e-5, 5e-5, 1e-4], [1e-3, 1e-2]
 # model optimisation settings
 pipe.add_parameter("base_train_task_id", "", "base train task")
-pipe.add_parameter("time_limit_minutes", 1440.0, "Maximum optimization time limit in minutes")
-pipe.add_parameter("num_epochs", [10,20], "list of epochs")
+pipe.add_parameter("time_limit_minutes", 60.0, "Maximum optimization time limit in minutes")
+pipe.add_parameter("num_epochs", [2,3], "list of epochs")
 pipe.add_parameter("batch_size", [16, 32], "list of batch size")
 pipe.add_parameter("lr", [1e-5, 5e-5, 1e-4], "list of learning rate")
 pipe.add_parameter("weight_decay", [1e-3,1e-2], "weight decay values in list")
@@ -262,7 +267,7 @@ STEP 7: Test Data Reference description generation
 dataset_id = ""
 dataset_name = "Desc_Eval_Dataset"
 eval_dataset_id = ''
-eval_dataset_name = "eval_dataset_zip"
+eval_dataset_name = "eval_dataset_zip" #need to change here
 
 pipe.add_parameter("dataset_id", "", "latest id of eval data img-label mapping from step 2")
 pipe.add_parameter("dataset_name", "Desc_Eval_Dataset", "latest of eval data img-label name from step 2")
@@ -309,13 +314,13 @@ def load_eval_config(model_variant) -> dict:
 dataset_id= '',              
 dataset_name= 'Desc_Caption_EvalDataset ',              # latest registered dataset
 eval_dataset_id= '',
-eval_dataset_name= 'eval_dataset_zip',
+eval_dataset_name= 'eval_dataset_zip',                  #need to change here
 desc_draft_model_id= '',       # the unpublished model to evaluate 
 desc_pub_model_name= 'student_desc_model'
 eval_batch_size= 16
 
 pipe.add_parameter("eval_dataset_id", "", "Overitten if previous task is not skipped. If set, ignore eval_dataset_name")
-pipe.add_parameter("eval_dataset_name", "eval_dataset_zip", "latest eval image dataset name")
+pipe.add_parameter("eval_dataset_name", "eval_dataset_zip", "latest eval image dataset name")      #need to change here
 pipe.add_parameter("dataset_id", "", "latest eval caption dataset name")
 pipe.add_parameter("dataset_name", "Desc_Caption_EvalDataset", "latest eval caption dataset name")
 pipe.add_parameter("desc_draft_model_id", "", "latest trained model in draft state")

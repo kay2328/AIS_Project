@@ -25,7 +25,7 @@ params = {
 }
 logger = task.get_logger()
 task.connect(params)
-task.execute_remotely(queue_name="desc_preparation")
+task.execute_remotely(queue_name=project.get('queue-gpu'))
 
 """
 Fetching captions dataset from task 3
@@ -78,15 +78,6 @@ for split, split_map in [("train", train_map), ("val", val_map)]:
     with open(dst, "w") as f:
         json.dump(split_map, f, indent=2)
     logging.info(f"Wrote {len(split_map)} entries to {dst}")
-
-# (Optional) Copy images into split folders
-# for split, stems in [("train", train_stems), ("val", val_stems), ("test", test_stems)]:
-#     img_out = dest_path / split / "images"
-#     img_out.mkdir(parents=True, exist_ok=True)
-#     for s in stems:
-#         src = images_root / f"{s}.jpg"
-#         if src.exists():
-#             shutil.copy(src, img_out / src.name)
 
 # Upload the splits as a new ClearML dataset
 split_data = Dataset.create(

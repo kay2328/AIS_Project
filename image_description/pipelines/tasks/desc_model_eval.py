@@ -35,16 +35,16 @@ task = Task.init(project_name=project_name,
                 task_name="step8_desc_model_evaluation", 
                 task_type=Task.TaskTypes.qc)
 params = {
-    'dataset_id': '', #'f6865cde77d843eb93829a268b2adeaf',                # specific version of the eval caption dataset
+    'dataset_id': '',  # specific version of the eval caption dataset
     'dataset_name': 'Desc_Caption_EvalDataset',              # latest registered dataset
-    'eval_dataset_id': '', #'e19da140dd6a479c864dd7bdf930918d',#'2231b5b121924ed684d6560cf6839619',     # specific version of the dataset
+    'eval_dataset_id': '',  # specific version of the dataset
     'eval_dataset_name': 'eval_dataset_zip',
     'desc_draft_model_id': '',    # the unpublished model to evaluate 
     'desc_pub_model_name': 'student_desc_models',       # the published model name for comparison
     'eval_batch_size': 16
 }
 task.connect(params)
-task.execute_remotely(queue_name="desc_preparation")
+task.execute_remotely(queue_name=project.get('queue-gpu'))
 task_params = task.get_parameters()
 logging.info("model_eval params=", task_params)
 
@@ -67,7 +67,7 @@ if not img_dataset_id and not img_dataset_name:
 """
 Reference description/caption Dataset for evaluation - desc_caption_testdataset.json
 """
-# 2. Fetch JSON dataset from "Desc_Caption_EvalDataset" under "Description" project
+# 2. Fetch JSON dataset from "Desc_Caption_EvalDataset" under "Description_release" project
 try: 
     # download the latest registered caption eval dataset
     server_dataset = Dataset.get(dataset_id=dataset_id, only_completed=True, alias="eval_cap_dataset")
@@ -83,12 +83,12 @@ logging.info(f"Split JSONs located at: {eval_cap_path}")
 """
 Fetching image dataset for evaluation
 """
-# Fetch images ZIP from "eval_dataset_zip" under "Detection" project
+# Fetch images ZIP from "eval_dataset_zip" under "Detection" project #need to change here
 try: 
     # download the latest registered dataset
     server_dataset = Dataset.get(dataset_id=img_dataset_id, only_completed=True, alias="eval_img_dataset")
 except ValueError:
-    server_dataset = Dataset.get(dataset_name=img_dataset_name, dataset_project="Detection", only_completed=True, alias="eval_img_dataset")
+    server_dataset = Dataset.get(dataset_name=img_dataset_name, dataset_project="Detection", only_completed=True, alias="eval_img_dataset") #need to change here
 extract_path = server_dataset.get_local_copy()          
 print(f"Downloaded eval image dataset name: {server_dataset.name} id: ({server_dataset.id}) to: {extract_path}")
 

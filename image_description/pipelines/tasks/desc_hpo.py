@@ -1,11 +1,9 @@
 import sys
 import os
-from clearml import Task, Dataset
+from clearml import Task
 from clearml.automation import HyperParameterOptimizer, GridSearch
 from clearml.automation import DiscreteParameterRange
 import logging
-import time
-import json
 import ast
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../src')))
 from enigmaai.config import Project, ConfigFactory
@@ -37,9 +35,9 @@ task = Task.init(project_name=project_name,
 params = {
     'base_train_task_id': '', 
     'run_as_service': False,
-    'time_limit_minutes': 1440.0, 
+    'time_limit_minutes': 60.0, 
     'test_queue': 'desc_preparation',  
-    'num_epochs': [10, 20], 
+    'num_epochs': [2, 3], 
     'batch_size': [16, 32],
     'lr': [1e-5, 5e-5, 1e-4],
     'weight_decay': [1e-3, 1e-2]  # Default weight decay
@@ -52,9 +50,9 @@ logger.info(f"model_HPO params={task_params}")
 
 base_task_id = task_params['General/base_train_task_id']
 
-num_epochs   = ast.literal_eval(task_params['General/num_epochs'])   # [10, 20]
-batch_size  = ast.literal_eval(task_params['General/batch_size'])  # [16, 32]
-lr          = ast.literal_eval(task_params['General/lr'])         # [1e-5, 5e-5, 1e-4]
+num_epochs   = ast.literal_eval(task_params['General/num_epochs'])  
+batch_size  = ast.literal_eval(task_params['General/batch_size']) 
+lr          = ast.literal_eval(task_params['General/lr'])       
 weight_decay         = ast.literal_eval(task_params['General/weight_decay'])
 # Exit if not base task
 if not base_task_id:

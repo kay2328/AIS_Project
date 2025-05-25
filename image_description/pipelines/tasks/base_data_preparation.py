@@ -29,13 +29,13 @@ task = Task.init(project_name=project_name,
                 task_name="step1_desc_basedata_preparation",
                 task_type=Task.TaskTypes.data_processing)
 params = {
-    'base_dataset_id': '', #'26083b24ab0c47219a5e4f3fe026b085',#'2231b5b121924ed684d6560cf6839619',     # specific version of the dataset
-    'base_dataset_name': 'base_dataset_zip',               # latest registered dataset
+    'base_dataset_id': '',     # specific version of the dataset
+    'base_dataset_name': 'base_dataset_zip',    # latest registered dataset      #need to change here
 }
 
 logger = task.get_logger()
 task.connect(params)
-task.execute_remotely(queue_name="desc_preparation")
+task.execute_remotely(queue_name=project.get('queue-gpu'))
 dataset_id = task.get_parameters()['General/base_dataset_id']
 dataset_name = task.get_parameters()['General/base_dataset_name']
 
@@ -48,7 +48,7 @@ if dataset_id:
     server_dataset = Dataset.get(dataset_id=dataset_id, only_completed=True, alias="base_dataset")
 elif dataset_name: 
     # download the latest registered dataset
-    server_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="Detection", only_completed=True, alias="base_dataset")
+    server_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="Detection", only_completed=True, alias="base_dataset") #need to change here
 
 extract_path = server_dataset.get_local_copy()          
 print(f"Downloaded base dataset name: {server_dataset.name} id: ({server_dataset.id}) to: {extract_path}")

@@ -25,7 +25,7 @@ The resulting pseudo captions are saved to an output JSON file.
 import os
 import json
 import logging
-from clearml import Task, Dataset, Model
+from clearml import Task, Dataset
 from pathlib import Path
 import torch
 import sys
@@ -51,13 +51,13 @@ task = Task.init(project_name=project_name,
 params = {
     'dataset_id': '',                # specific version of the dataset
     'dataset_name': 'Desc_Eval_Dataset',              # latest registered dataset
-    'eval_dataset_id': '', #'e19da140dd6a479c864dd7bdf930918d',#'2231b5b121924ed684d6560cf6839619',     # specific version of the dataset
-    'eval_dataset_name': 'eval_dataset_zip'
+    'eval_dataset_id': '',    # specific version of the dataset
+    'eval_dataset_name': 'eval_dataset_zip'        #need to change here
 }
 
 logger = task.get_logger()
 task.connect(params)
-task.execute_remotely(queue_name="desc_preparation")
+task.execute_remotely(queue_name=project.get('queue-gpu'))
 
 dataset_id = task.get_parameters()['General/dataset_id']
 dataset_name = task.get_parameters()['General/dataset_name']
@@ -74,13 +74,13 @@ if not img_dataset_id and not img_dataset_name:
 """
 Fetch images data to generate descriptions for evaluation
 """
-# get the image dataset from "Detection project - base_dataset_zip"
+# get the image dataset from "Detection project - eval_dataset_zip"  #need to change here
 try: 
     # download the latest registered dataset
     server_dataset = Dataset.get(dataset_id=img_dataset_id, only_completed=True, alias="base_dataset")
 except ValueError:
     # download the latest registered dataset
-    server_dataset = Dataset.get(dataset_name=img_dataset_name, dataset_project="Detection", only_completed=True, alias="base_dataset")
+    server_dataset = Dataset.get(dataset_name=img_dataset_name, dataset_project="Detection", only_completed=True, alias="base_dataset") #need to change here
 extract_path = server_dataset.get_local_copy()          
 print(f"Downloaded base dataset name: {server_dataset.name} id: ({server_dataset.id}) to: {extract_path}")
 
