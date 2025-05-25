@@ -2,7 +2,7 @@ import sys
 import os
 from clearml import Task, Dataset
 from clearml.automation import HyperParameterOptimizer, GridSearch
-from clearml.automation import DiscreteParameterRange, UniformIntegerParameterRange, UniformParameterRange
+from clearml.automation import DiscreteParameterRange
 import logging
 import time
 import json
